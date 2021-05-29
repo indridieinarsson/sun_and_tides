@@ -17,14 +17,28 @@
 Example of using the FES Python interface
 """
 import argparse
-import datetime
 import numpy as np
 import pyfes
 import peakutils
 from scipy.interpolate import interp1d
 
+# ------------------
+import astral
+from ics import Calendar, Event
+from datetime import datetime, date, timedelta
+import pytz
+from geopy.geocoders import Nominatim
+from functools import partial
+from astral.geocoder import database, lookup
+from astral.sun import sun
+
+import datetime as dt
+from pytz import timezone
+from skyfield import almanac
+from skyfield.api import E, N, W, wgs84, load
+
 def float_to_datetime(fl):
-    return datetime.datetime.fromtimestamp(fl)
+    return datetime.fromtimestamp(fl)
 
 def usage():
     """
@@ -44,7 +58,7 @@ def usage():
                         type=argparse.FileType('r'))
     parser.add_argument('--date',
                         help='Date of calculation of the oceanic tide.',
-                        default=datetime.datetime(2021, 5, 28))
+                        default=datetime(2021, 5, 1))
     return parser.parse_args()
 
 
@@ -60,7 +74,7 @@ def main():
 
     # Creating the time series
     dates = np.array([
-        args.date + datetime.timedelta(seconds=item * 3600/4)
+        args.date + timedelta(seconds=item * 3600/4)
         for item in range(24*32*4)
     ])
 
@@ -69,31 +83,153 @@ def main():
 
     # Computes tides
     tide, lp, _ = short_tide.calculate(lons, lats, dates)
-    load, load_lp, _ = radial_tide.calculate(lons, lats, dates)
+    t_load, t_load_lp, _ = radial_tide.calculate(lons, lats, dates)
 
 
 
 
-    total_tide = tide + lp + load
+    total_tide = tide + lp + t_load
     t_float = np.array([d.timestamp() for d in dates])
     ttide = interp1d(t_float, total_tide)
 
     indexes = peakutils.indexes(total_tide, min_dist=4)
     peaks_x = peakutils.interpolate(t_float, total_tide, ind=indexes)
     peaks_x = [float_to_datetime(p) for p in peaks_x]
+    flod = list()
     for p in peaks_x:
         p = p.replace(second=0, microsecond=0) 
-        print("%s - flóð %5.2f m " % (p, ttide(p.timestamp())/100 ) )
+        try:
+            print("%s - flóð %5.2f m " % (p, ttide(p.timestamp())/100 ) )
+            flod.append((p, ttide(p.timestamp())/100 ))
+        except Exception:
+            pass
+        
 
     indexes = peakutils.indexes(-total_tide, min_dist=5*4)
     peaks_x = peakutils.interpolate(t_float, -total_tide, ind=indexes)
     peaks_x = [float_to_datetime(p) for p in peaks_x]
+    fjara = list()
     for p in peaks_x:
         p = p.replace(second=0, microsecond=0) 
         try:
             print("%s - fjara %5.2f m " % (p, ttide(p.timestamp())/100 ) )
+            fjara.append((p, ttide(p.timestamp())/100 ))
         except Exception:
             pass
+
+
+    morgun = dict()
+    morgun[0] = None
+    morgun[1] = "Dögun"
+    morgun[2] = None # Nautical Twilight
+    morgun[3] = "Birting"
+    morgun[4] = "Sólris"
+    
+    kveld = dict()
+    kveld[0] = None
+    kveld[1] = "Dagsetur"
+    kveld[2] = None # Nautical Twilight
+    kveld[3] = "Myrkur"
+    kveld[4] = "Sólarlag"
+    
+    def daterange(start_date, end_date):
+        for n in range(int((end_date - start_date).days)):
+            yield start_date + timedelta(n)
+    
+    #https://rhodesmill.org/skyfield/examples.html#dark-twilight-day-example
+    # 0 Dark of night.
+    # 1 Astronomical twilight. - Dögun - Myrkur
+    # 2 Nautical twilight.
+    # 3 Civil twilight. - Birting - Dagsetur
+    # 4 Daytime.
+    def alm_for_day(this_time, city_info, cal):
+        zone = timezone('UTC')
+        now = zone.localize(this_time)
+        midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        next_midnight = midnight + timedelta(days=1)
+        ts = load.timescale()
+        t0 = ts.from_datetime(midnight)
+        t1 = ts.from_datetime(next_midnight)
+        eph = load('de421.bsp')
+        city = wgs84.latlon(city_info.latitude * N, city_info.longitude * E)
+        f = almanac.dark_twilight_day(eph, city)
+        times, events = almanac.find_discrete(t0, t1, f)
+        previous_e = f(t0)[()]
+        morning_ev = Event()
+        morning_ev.name = "Sólarupprás"
+        morning_ev.dtstamp = datetime.now()
+        morning_desc = ""
+        evening_ev = Event()
+        evening_ev.name = "Sólsetur"
+        evening_ev.dtstamp = datetime.now()
+        evening_desc = ""
+        for t, e in zip(times, events):
+            #print("e ", e)
+            tt = t.astimezone(zone)
+            tstr = str(t.astimezone(zone))[:16]
+            tstr2 = str(t.astimezone(zone))[11:16]
+            if previous_e < e:
+                if not morgun[e] is None:
+                    tmp = "{} {}\n".format(tstr2, morgun[e])#, 'starts'
+                    morning_desc += tmp
+                if e == 4: # Day starts:
+                    print(tstr, morgun[e])
+                    morning_ev.begin = tt
+                    morning_ev.duration = timedelta(seconds=10)
+                else:
+                    pass
+            else:
+                if not kveld[previous_e] is None:
+                    tmp = "{} {} \n".format(tstr2, kveld[previous_e])#, 'starts'
+                    evening_desc += tmp
+                if e == 3 : # Day ends
+                    evening_ev.begin = tt
+                    evening_ev.duration = timedelta(seconds=10)
+                else:
+                    pass
+            previous_e = e
+        morning_ev.description = morning_desc
+        cal.events.add(morning_ev)
+        evening_ev.description = evening_desc
+        cal.events.add(evening_ev)
+        print(morning_desc)
+        print(evening_desc)
+    
+    cal = Calendar()
+    
+    citystr = "Reykjavik"
+    geolocator = Nominatim(user_agent="indridis_calendar_generator")
+    geocode = partial(geolocator.geocode, language="en")
+    city_info = geocode(citystr)
+    
+    start_date = datetime(2021, 5, 1)
+    end_date = datetime(2021, 6, 1)
+    for single_date in daterange(start_date, end_date):
+        alm_for_day(single_date, city_info, cal)
+
+    for f in flod:
+        flod_ev = Event()
+        flod_ev.name = "Flóð"
+        flod_ev.dtstamp = datetime.now()
+        flod_ev.description = "%s : %5.2f m" % f 
+        flod_ev.begin = f[0]
+        flod_ev.duration = timedelta(seconds=10)
+        cal.events.add(flod_ev)
+    for f in fjara:
+        fjara_ev = Event()
+        fjara_ev.name = "Fjara"
+        fjara_ev.dtstamp = datetime.now()
+        fjara_ev.description = "%s : %5.2f m" % f 
+        fjara_ev.begin = f[0]
+        fjara_ev.duration = timedelta(seconds=10)
+        cal.events.add(fjara_ev)
+    
+    with open('2021_05.ics', 'w') as f:
+        f.writelines(cal)
+
+
+
+
 
     # for idx, date in enumerate(dates):
         # print("%s %9.3f %9.3f %9.3f %9.3f %9.3f %9.3f %9.3f" %

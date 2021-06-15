@@ -56,9 +56,12 @@ def usage():
                         'the defintion of grids to use to compute the '
                         'load tide',
                         type=argparse.FileType('r'))
-    parser.add_argument('--date',
-                        help='Date of calculation of the oceanic tide.',
+    parser.add_argument('--startdate',
+                        help='Date of calculation of the oceanic tide.', type=datetime.fromisoformat,
                         default=datetime(2021, 5, 1))
+    parser.add_argument('--enddate',
+                        help='Date of calculation of the oceanic tide.', type=datetime.fromisoformat,
+                        default=datetime(2021, 6, 1))
     return parser.parse_args()
 
 
@@ -72,11 +75,19 @@ def main():
     short_tide = pyfes.Handler("ocean", "io", args.ocean.name)
     radial_tide = pyfes.Handler("radial", "io", args.load.name)
 
+
+    delta = args.enddate - args.startdate
+    print(delta.days)
+    exit
+
+
     # Creating the time series
     dates = np.array([
-        args.date + timedelta(seconds=item * 3600/4)
-        for item in range(24*32*4)
+        args.startdate + timedelta(seconds=item * 3600/4)
+        for item in range((delta.days+1)*24*4)
     ])
+    # print("date : ", args.date)
+    # print(dates)
 
     lats = np.full(dates.shape, 64.154673)
     lons = np.full(dates.shape, -21.908769)
@@ -170,7 +181,7 @@ def main():
             tstr2 = str(t.astimezone(zone))[11:16]
             if previous_e < e:
                 if not morgun[e] is None:
-                    tmp = "{} {}\n".format(tstr2, morgun[e])#, 'starts'
+                    tmp = "{} {}".format(tstr2, morgun[e])#, 'starts'
                     morning_desc += tmp
                 if e == 4: # Day starts:
                     print(tstr, morgun[e])
@@ -180,7 +191,7 @@ def main():
                     pass
             else:
                 if not kveld[previous_e] is None:
-                    tmp = "{} {} \n".format(tstr2, kveld[previous_e])#, 'starts'
+                    tmp = "{} {}".format(tstr2, kveld[previous_e])#, 'starts'
                     evening_desc += tmp
                 if e == 3 : # Day ends
                     evening_ev.begin = tt
@@ -202,8 +213,8 @@ def main():
     geocode = partial(geolocator.geocode, language="en")
     city_info = geocode(citystr)
     
-    start_date = datetime(2021, 5, 1)
-    end_date = datetime(2021, 6, 1)
+    start_date = args.startdate#  datetime(2021, 1, 1)
+    end_date = args.enddate# datetime(2021, 12, 31)
     for single_date in daterange(start_date, end_date):
         alm_for_day(single_date, city_info, cal)
 

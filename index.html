@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Tide Predictor in the browser</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"/>
+  </head>
+  <body>
+    <div class="container">
+      <h1>High/low tides for Monterey, CA</h1>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>High/Low</th>
+            <th>Level (meters)</th>
+          </tr>
+          <tbody id="tides">
+
+          </tbody>
+        </thead>
+      </table>
+    </div>
+
+    <script>
+        const harmonicsOptions = {};
+    </script>
+    <script src="./tide-predictor.js"></script>
+    <script>
+      (()=> {
+        fetch(
+          'https://raw.githubusercontent.com/indridieinarsson/sun_and_tides/master/rvk.json'
+        )
+        .then(response => {
+          return response.json()
+        }).then(harmonics => {
+          //          console.log('"blefl')
+          //          console.log(harmonics)
+          //          console.log("---")
+          const startDate = new Date()
+          const endDate = new Date(startDate.getTime() + (10 * 24 * 60 * 60 * 1000))
+                    let pred = tidePredictor(harmonics, {phaseKey: 'phase',})
+           const highLow = pred.getExtremesPrediction({
+  start: startDate,
+  end: endDate,
+  labels: {
+    //optional human-readable labels
+    high: 'High tide',
+    low: 'Low tide',
+  },
+})
+
+              console.log("tides : ")
+              console.log(highLow)
+              console.log("---------")
+                    //const highLow = tidePredictor(harmonics, {phaseKey: 'phase',
+                    //        } ).getExtremesPrediction(new Date('2019-01-01'), new Date('2019-01-10'))
+          
+          highLow.forEach(level => {
+            const tableRow = document.createElement('tr')
+            tableRow.innerHTML = `
+              <td>${level.time}</td>
+              <td>${level.label}</td>
+              <td>${level.level}</td>
+            `
+            document.getElementById('tides').appendChild(tableRow)
+          })
+        })
+      })()
+    </script>
+  </body>
+</html>

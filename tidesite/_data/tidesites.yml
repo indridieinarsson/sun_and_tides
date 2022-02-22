@@ -1,0 +1,9 @@
+- sitename: Reykjavík
+  datafile: reykjavik.json
+  latitude: 64.169902
+  longitude: -21.981926
+
+- sitename: Hólmavík
+  datafile: holmavik.json
+  latitude: 66.169902
+  longitude: -21.981926

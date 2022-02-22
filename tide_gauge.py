@@ -89,8 +89,13 @@ def main():
     # print("date : ", args.date)
     # print(dates)
 
-    lats = np.full(dates.shape, 64.154673)
-    lons = np.full(dates.shape, -21.908769)
+    # Stykkishólmur: 65.10761731461221, -22.704729429936798
+    lats = np.full(dates.shape, 65.10761731461221)
+    lons = np.full(dates.shape, -22.704729429936798)
+
+    # Reykjavík:
+    #lats = np.full(dates.shape, 64.154673)
+    #lons = np.full(dates.shape, -21.908769)
 
     # Computes tides
     tide, lp, _ = short_tide.calculate(lons, lats, dates)

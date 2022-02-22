@@ -1,0 +1,5 @@
+tidesite/_site
+tidesite/.sass-cache
+tidesite/.jekyll-cache
+tidesite/.jekyll-metadata
+tidesite/vendor

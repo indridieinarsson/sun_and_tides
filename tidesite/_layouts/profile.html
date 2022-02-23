@@ -67,16 +67,12 @@ fetch(jsonfile)
 <button onclick="Puck.write('LED1.reset();\n');">LED Off!</button>
 <button onclick="makeCalc();">Calculate Tides</button>
 
-
 {% leaflet_map { "center" : [{{page.latitude}}, {{page.longitude}}],
     "zoom" : 10,
     "providerBasemap": "OpenTopoMap" } %}
     {% leaflet_marker {"latitude" : {{page.latitude}},
                        "longitude" : {{page.longitude}},
 		       "popupContent": "{{page.sitename}}" } %} 
-    {% leaflet_geojson  %}
-
-                       
 {% endleaflet_map %}
 
   </div>

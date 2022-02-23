@@ -27,9 +27,49 @@
   </header>
 
   <div class="post-content e-content" itemprop="articleBody">
+<script src="{{ site.baseurl }}/assets/tide-predictor.js"></script>
+<!-- <script src="{{ site.baseurl }}/assets/myscript.js"></script> -->
+<script>
+    function sendHighLow(hl){
+        console.log("Tides : ");
+        console.log(hl);
+        console.log("**********");
+        myString = JSON.stringify(hl)
+        console.log(myString)
+    };
+function makeCalc() {
+const harmonicsOptions = {};
+const jsonfile = "{{ site.url }}/assets/{{page.datafile}}";
+fetch(jsonfile)
+    .then(response =>
+        {return response.json()})
+    .then(harmonics => {
+        const startDate = new Date()
+        const endDate = new Date(startDate.getTime() + (30*24*60*60*1000))
+        let pred = tidePredictor(harmonics, {phaseKey: 'phase',})
+        var highLow = pred.getExtremesPrediction({
+            start: startDate,
+            end: endDate,
+            labels: {
+                //optional human-readable labels
+                high: 'High tide',
+                low: 'Low tide',
+            },
+        });
+        sendHighLow(highLow);
+    })
+}
+</script>
 
-{% leaflet_map { "center" : [64.7741, -18.65478],
-    "zoom" : 6,
+<script src="https://www.puck-js.com/puck.js"></script>
+
+<button onclick="Puck.write('LED1.set();\n');">LED On!</button>
+<button onclick="Puck.write('LED1.reset();\n');">LED Off!</button>
+<button onclick="makeCalc();">Calculate Tides</button>
+
+
+{% leaflet_map { "center" : [{{page.latitude}}, {{page.longitude}}],
+    "zoom" : 10,
     "providerBasemap": "OpenTopoMap" } %}
     {% leaflet_marker {"latitude" : {{page.latitude}},
                        "longitude" : {{page.longitude}},

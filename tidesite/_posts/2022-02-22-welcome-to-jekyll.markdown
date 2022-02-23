@@ -39,7 +39,18 @@ end
 print_hi('Tom')
 #=> prints 'Hi, Tom' to STDOUT.
 {% endhighlight %}
+<table class="table">
+  <thead>
+    <tr>
+      <th>Time</th>
+      <th>High/Low</th>
+      <th>Level (meters)</th>
+    </tr>
+    <tbody id="tides">
 
+    </tbody>
+  </thead>
+</table>
 <script src="{{ site.baseurl }}/assets/tide-predictor.js"></script>
 <script src="{{ site.baseurl }}/assets/myscript.js"></script>
 <script src="https://www.puck-js.com/puck.js"></script>
@@ -55,13 +66,34 @@ print_hi('Tom')
     {% leaflet_marker {"latitude" : {{st.latitude}},
                        "longitude" : {{st.longitude}},
                        "popupContent": "{{st.sitename}}"} %} 
-    {% endfor %}
-{% endleaflet_map %}
+
+ {% leaflet_geojson {
+ "type": "Feature",
+ "properties": {"popupContent": "{{st.sitename}}",
+ "href": "/tides/{{st.site}}"},
+ "geometry": {
+ "type": "Point",
+ "coordinates": 
+ [{{st.longitude}}, {{st.latitude}}]
+ }
+ } %}
+ {% endfor %}
+ {% endleaflet_map %}
 
     {%- for st in site.data.tidesites %}
     
     {{ st.sitename}}
     {% endfor %}
+"type": "Feature",
+        "properties": {"popupContent": "Banff National Park",
+            "href": "/myposts/post2"},
+        "geometry": {
+            "type": "Point",
+            "coordinates": 
+                [-21.981926,64.169902]
+        }
+
+
 
 Check out the [Jekyll docs][jekyll-docs] for more info on how to get the most out of Jekyll. File all bugs/feature requests at [Jekyll’s GitHub repo][jekyll-gh]. If you have questions, you can ask them on [Jekyll Talk][jekyll-talk].
 

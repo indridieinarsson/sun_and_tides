@@ -1,9 +1,35 @@
 - sitename: Reykjavík
+  site: reykjavik.html
   datafile: reykjavik.json
   latitude: 64.169902
   longitude: -21.981926
 
+- sitename: Hvalfjörður
+  site: hvalfjordur.html
+  datafile: hvalfjordur.json
+  latitude: 64.288122
+  longitude: -21.903305
+
+- sitename: Borgarjörður
+  site: borgarfjordur.html
+  datafile: borgarfjordur.json
+  latitude: 64.460067
+  longitude: -22.061234
+ 
+- sitename: Löngufjörur
+  site: longufjorur.html
+  datafile: longufjorur.json
+  latitude:   64.718466
+  longitude: -22.483521
+
+- sitename: Arnarstapi
+  site: arnarstapi.html
+  datafile: arnarstapi.json
+  latitude: 64.755976
+  longitude: -23.621807
+
 - sitename: Hólmavík
+  site: holmavik.html
   datafile: holmavik.json
-  latitude: 66.169902
-  longitude: -21.981926
+  latitude: 65.682037
+  longitude: -21.607361

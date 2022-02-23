@@ -3,28 +3,36 @@ from scipy import interpolate
 
 from pathlib import Path
 import json
+import yaml
 
-dir = 'ocean_tide_extrapolated'
 
-pathlist = Path(dir).glob('**/*.nc')
+fesdir = 'ocean_tide_extrapolated'
+yamlfile = 'tidesite/_data/tidesites.yml'
+
+with open(yamlfile) as f:
+    sites = yaml.safe_load(f)
+    print(sites)
+
 #point = (63, 23)
 # Reykjavík : 
-point = (64.166535, -21.972971+360)
+for site in sites:
+    print(site)
+    pathlist = Path(fesdir).glob('**/*.nc')
+    sitename = site['sitename']
+    point = (site['latitude'], site['longitude']+360)
+    data = []
+    for path in pathlist:
+        # print(path)
+        constname = path.stem
+        if constname == 'la2':
+            constname = 'lam2'
+    
+        ds = nc.Dataset(path)
+        phase = interpolate.interpn((ds.variables['lat'], ds.variables['lon']), ds.variables['phase'], point ) [0]
+        ampl = interpolate.interpn((ds.variables['lat'], ds.variables['lon']), ds.variables['amplitude'], point )[0]
+        print(f' {sitename} {constname} {ampl}, {phase}')
+        data.append({'name':constname.upper(), 'amplitude':ampl, 'phase':phase})
 
-data = []
-for path in pathlist:
-    constname = path.stem
-    if constname == 'la2':
-        constname = 'lam2'
-
-    ds = nc.Dataset(path)
-    phase = interpolate.interpn((ds.variables['lat'], ds.variables['lon']), ds.variables['phase'], point ) [0]
-
-    ampl = interpolate.interpn((ds.variables['lat'], ds.variables['lon']), ds.variables['amplitude'], point )[0]
-
-    print(f' {constname} {ampl}, {phase}')
-    data.append({'name':constname.upper(), 'amplitude':ampl, 'phase':phase})
-
-
-with open('rvk.json', 'w') as f:
-    json.dump(data, f)
+    dfile = site['datafile']
+    with open(f'tidesite/_data/{dfile}', 'w') as f:
+        json.dump(data, f)

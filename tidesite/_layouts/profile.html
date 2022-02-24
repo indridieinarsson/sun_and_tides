@@ -37,6 +37,25 @@
         myString = JSON.stringify(hl)
         console.log(myString)
     };
+function writeToTable(hl){
+    const monthNames = ["Janúar", "Febrúar", "Mars", "Apríl", "Maí", "Júní",
+                        "Júlí", "Águst", "September", "Október", "Nóvember", "Desember"
+];
+
+    hl.forEach(level => {
+        const tableRow = document.createElement('tr')
+        sealevelm = level.level/100;
+        dt = level.time
+        dtfmt = dt.getFullYear()+' '+dt.getDay()+' '+monthNames[dt.getMonth()]+' '+dt.getHours()+':'+dt.getMinutes()
+        tableRow.innerHTML = `
+              <td>${dtfmt}</td>
+              <td>${level.label}</td>
+              <td>${sealevelm}</td>
+            `
+        document.getElementById('tides').appendChild(tableRow)
+    })
+              };
+
 function makeCalc() {
 const harmonicsOptions = {};
 const jsonfile = "{{ site.url }}/assets/{{page.datafile}}";
@@ -57,15 +76,16 @@ fetch(jsonfile)
             },
         });
         sendHighLow(highLow);
+        writeToTable(highLow);
     })
 }
 </script>
 
 <script src="https://www.puck-js.com/puck.js"></script>
 
-<button onclick="Puck.write('LED1.set();\n');">LED On!</button>
-<button onclick="Puck.write('LED1.reset();\n');">LED Off!</button>
-<button onclick="makeCalc();">Calculate Tides</button>
+<!-- <button onclick="Puck.write('LED1.set();\n');">LED On!</button>
+ <button onclick="Puck.write('LED1.reset();\n');">!</button> -->
+<button onclick="makeCalc();">Reikna sjávarföll</button>
 
 {% leaflet_map { "center" : [{{page.latitude}}, {{page.longitude}}],
     "zoom" : 10,
@@ -74,8 +94,19 @@ fetch(jsonfile)
                        "longitude" : {{page.longitude}},
 		       "popupContent": "{{page.sitename}}" } %} 
 {% endleaflet_map %}
-
   </div>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Tími</th>
+      <th>Flóð/Fjara</th>
+      <th>Sjávarhæð (metrar)</th>
+    </tr>
+    <tbody id="tides">
+
+    </tbody>
+  </thead>
+</table>
 
   {%- if site.disqus.shortname -%}
     {%- include disqus_comments.html -%}

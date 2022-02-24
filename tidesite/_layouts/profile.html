@@ -27,6 +27,8 @@
   </header>
 
   <div class="post-content e-content" itemprop="articleBody">
+
+<script src="https://www.puck-js.com/puck.js"></script>
 <script src="{{ site.baseurl }}/assets/tide-predictor.js"></script>
 <!-- <script src="{{ site.baseurl }}/assets/myscript.js"></script> -->
 <script>
@@ -34,8 +36,10 @@
         console.log("Tides : ");
         console.log(hl);
         console.log("**********");
-        myString = JSON.stringify(hl)
-        console.log(myString)
+        myString = JSON.stringify(hl);
+        console.log(myString);
+        cmd="\x03\x10require(\"Storage\").writeJSON(\"tides.data.js\","+myString+")\n";
+        Puck.write(cmd);
     };
 function writeToTable(hl){
     const monthNames = ["Janúar", "Febrúar", "Mars", "Apríl", "Maí", "Júní",
@@ -89,7 +93,6 @@ fetch(jsonfile)
 }
 </script>
 
-<script src="https://www.puck-js.com/puck.js"></script>
 
 <!-- <button onclick="Puck.write('LED1.set();\n');">LED On!</button>
  <button onclick="Puck.write('LED1.reset();\n');">!</button> -->

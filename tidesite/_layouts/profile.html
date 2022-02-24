@@ -44,13 +44,21 @@ function writeToTable(hl){
 
     hl.forEach(level => {
         const tableRow = document.createElement('tr')
-        sealevelm = level.level/100;
-        dt = level.time
-        dtfmt = dt.getFullYear()+' '+dt.getDay()+' '+monthNames[dt.getMonth()]+' '+dt.getHours()+':'+dt.getMinutes()
+        sealevelm = (level.level/100).toFixed(2);
+        dt = level.time;
+        lbl = "";
+        if (level.high)
+        {
+            lbl = "Flóð";
+        } else
+        {
+            lbl = "Fjara";
+        }
+        dtfmt = dt.getFullYear()+' '+dt.getDay()+' '+monthNames[dt.getMonth()]+' '+dt.getHours()+':'+dt.getMinutes();
         tableRow.innerHTML = `
               <td>${dtfmt}</td>
-              <td>${level.label}</td>
-              <td>${sealevelm}</td>
+              <td>${lbl}</td>
+              <td>${sealevelm}m</td>
             `
         document.getElementById('tides').appendChild(tableRow)
     })

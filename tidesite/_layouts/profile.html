@@ -36,9 +36,17 @@
         console.log("Tides : ");
         console.log(hl);
         console.log("**********");
-        myString = JSON.stringify(hl);
-        console.log(myString);
-        cmd="\x03\x10require(\"Storage\").writeJSON(\"tides.data.js\","+myString+")\n";
+        //myString = JSON.stringify(hl);
+        filestr = []
+        for (key in hl){
+            entry = hl[key];
+            line = [entry['time'].getTime(), Math.trunc(entry['level']), entry['high']].join(",");
+            filestr.push(line)
+        }
+        myString = filestr.join("\n");
+        //console.log(ble)
+        //console.log(myString);
+        cmd="\x03\x10require(\"Storage\").writeJSON(\"tides.data.csv\","+myString+")\n";
         Puck.write(cmd);
     };
 function writeToTable(hl){

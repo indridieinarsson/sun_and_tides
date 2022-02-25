@@ -46,7 +46,7 @@
         myString = filestr.join("\n");
         //console.log(ble)
         //console.log(myString);
-        cmd="\x03\x10require(\"Storage\").writeJSON(\"tides.data.csv\","+myString+")\n";
+        cmd="\x03\x10require(\"Storage\").write(\"tides.data.csv\","+myString+")\n";
         Puck.write(cmd);
     };
 function writeToTable(hl){

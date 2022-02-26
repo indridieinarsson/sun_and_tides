@@ -46,7 +46,8 @@
         myString = filestr.join("\n");
         //console.log(ble)
         //console.log(myString);
-        cmd="\x03\x10require(\"Storage\").write(\"tides.data.csv\","+myString+")\n";
+        cmd="\x03\x10require(\"Storage\").write(\"tides.data.csv\",\" "+myString+"\")\n";
+        console.log(cmd);
         Puck.write(cmd);
     };
 function writeToTable(hl, lat0){
@@ -58,6 +59,7 @@ function writeToTable(hl, lat0){
         const tableRow = document.createElement('tr')
         sealevelm = ( (level.level - lat0)/100).toFixed(2);
         dt = level.time;
+        console.log(" time : " + dt);
         lbl = "";
         if (level.high)
         {
@@ -66,7 +68,8 @@ function writeToTable(hl, lat0){
         {
             lbl = "Fjara";
         }
-        dtfmt = dt.getFullYear()+' '+dt.getDay()+' '+monthNames[dt.getMonth()]+' '+dt.getHours()+':'+dt.getMinutes();
+        console.log("date : " + dt.getDate());
+        dtfmt = dt.getFullYear()+' '+dt.getDate()+' '+monthNames[dt.getMonth()]+' '+dt.getHours()+':'+dt.getMinutes();
         tableRow.innerHTML = `
               <td>${dtfmt}</td>
               <td>${lbl}</td>
@@ -89,8 +92,11 @@ fetch(jsonfile)
             lat0 = lat0 - harmonics[key]['amplitude'];
         }
         console.log("LAT "+lat0)
-        const startDate = new Date()
-        const endDate = new Date(startDate.getTime() + (30*24*60*60*1000))
+        const now = new Date();
+        const startDate = new Date(now.getTime() - (2*24*60*60*1000));
+        const endDate = new Date(now.getTime() + (30*24*60*60*1000));
+        console.log("Start time : " + startDate);
+        console.log("End time : " + endDate);
         let pred = tidePredictor(harmonics, {phaseKey: 'phase',})
         var highLow = pred.getExtremesPrediction({
             start: startDate,

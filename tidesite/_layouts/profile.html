@@ -32,7 +32,7 @@
 <script src="{{ site.baseurl }}/assets/tide-predictor.js"></script>
 <!-- <script src="{{ site.baseurl }}/assets/myscript.js"></script> -->
 <script>
-    function sendHighLow(hl){
+    function sendHighLow(hl, lat0){
         console.log("Tides : ");
         console.log(hl);
         console.log("**********");
@@ -40,7 +40,7 @@
         filestr = []
         for (key in hl){
             entry = hl[key];
-            line = [entry['time'].getTime(), Math.trunc(entry['level']), entry['high']].join(",");
+            line = [entry['time'].getTime(), Math.trunc(entry['level']+lat0), entry['high']].join(",");
             filestr.push(line)
         }
         myString = filestr.join("\n");
@@ -49,14 +49,14 @@
         cmd="\x03\x10require(\"Storage\").write(\"tides.data.csv\","+myString+")\n";
         Puck.write(cmd);
     };
-function writeToTable(hl){
+function writeToTable(hl, lat0){
     const monthNames = ["Janúar", "Febrúar", "Mars", "Apríl", "Maí", "Júní",
                         "Júlí", "Águst", "September", "Október", "Nóvember", "Desember"
 ];
 
     hl.forEach(level => {
         const tableRow = document.createElement('tr')
-        sealevelm = (level.level/100).toFixed(2);
+        sealevelm = ( (level.level - lat0)/100).toFixed(2);
         dt = level.time;
         lbl = "";
         if (level.high)
@@ -83,6 +83,12 @@ fetch(jsonfile)
     .then(response =>
         {return response.json()})
     .then(harmonics => {
+        lat0=0
+        // Lowest astronomical tide
+        for (key in harmonics){
+            lat0 = lat0 - harmonics[key]['amplitude'];
+        }
+        console.log("LAT "+lat0)
         const startDate = new Date()
         const endDate = new Date(startDate.getTime() + (30*24*60*60*1000))
         let pred = tidePredictor(harmonics, {phaseKey: 'phase',})
@@ -95,8 +101,8 @@ fetch(jsonfile)
                 low: 'Low tide',
             },
         });
-        sendHighLow(highLow);
-        writeToTable(highLow);
+        sendHighLow(highLow, lat0);
+        writeToTable(highLow, lat0);
     })
 }
 </script>

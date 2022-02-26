@@ -46,10 +46,31 @@
         myString = "\""+filestr.join(";")+"\"";
         //console.log(ble)
         //console.log(myString);
-        cmd="require(\"Storage\").write(\"tides.data.csv\","+myString+")\n";
+        cmd="require(\"Storage\").write(\"tides.data.csv\","+myString+");\n";
         console.log(cmd);
-        Puck.write(cmd);
+        Puck.connect(function(c) {
+            if (!c) {
+                alert("Couldn't connect!");
+                return;
+            }
+
+
+            c.write("reset();\n", function() {
+                // Wait for it to reset itself
+                setTimeout(function() {
+                    // Now tell it to write data on the current light
+                    // level to Bluetooth 10 times a second. Also
+                    // ensure that when disconnected, Puck.js resets
+                    // so the setInterval doesn't keep draining
+                    // battery.
+                    c.write(cmd,
+                            function() { console.log("Ready..."); });
+                }, 1500);
+            });
+        });
+        //Puck.write(cmd);
     };
+
 function writeToTable(hl, lat0){
     const monthNames = ["Janúar", "Febrúar", "Mars", "Apríl", "Maí", "Júní",
                         "Júlí", "Águst", "September", "Október", "Nóvember", "Desember"

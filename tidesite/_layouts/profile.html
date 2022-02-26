@@ -43,10 +43,10 @@
             line = [entry['time'].getTime(), Math.trunc(entry['level']+lat0), entry['high']].join(",");
             filestr.push(line)
         }
-        myString = filestr.join("\n");
+        myString = "\""+filestr.join(";")+"\"";
         //console.log(ble)
         //console.log(myString);
-        cmd="\x03\x10require(\"Storage\").write(\"tides.data.csv\",\" "+myString+"\")\n";
+        cmd="require(\"Storage\").write(\"tides.data.csv\","+myString+")\n";
         console.log(cmd);
         Puck.write(cmd);
     };

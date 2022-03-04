@@ -40,7 +40,7 @@
         filestr = []
         for (key in hl){
             entry = hl[key];
-            line = [entry['time'].getTime(), Math.trunc(entry['level']+lat0), entry['high']].join(",");
+            line = [entry['time'].getTime(), Math.trunc(entry['level']-lat0), entry['high']].join(",");
             filestr.push(line)
         }
         myString = "\""+filestr.join(";")+"\"";
@@ -53,8 +53,6 @@
                 alert("Couldn't connect!");
                 return;
             }
-
-
             c.write("reset();\n", function() {
                 // Wait for it to reset itself
                 setTimeout(function() {

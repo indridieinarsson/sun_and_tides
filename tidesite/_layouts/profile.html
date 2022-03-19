@@ -69,10 +69,41 @@
         //Puck.write(cmd);
     };
 
+
+// function writeCurrentTable(hl_u, hl_v){
+//     const monthNames = ["Janúar", "Febrúar", "Mars", "Apríl", "Maí", "Júní",
+//                         "Júlí", "Águst", "September", "Október", "Nóvember", "Desember"
+//                        ];
+
+//     hl.forEach(level => {
+//         const tableRow = document.createElement('tr')
+//         sealevelm = ( (level.level - lat0)/100).toFixed(2);
+//         dt = level.time;
+//         console.log(" time : " + dt);
+//         lbl = "";
+//         if (level.high)
+//         {
+//             lbl = "Flóð";
+//         } else
+//         {
+//             lbl = "Fjara";
+//         }
+//         console.log("date : " + dt.getDate());
+//         dtfmt = dt.getFullYear()+' '+dt.getDate()+' '+monthNames[dt.getMonth()]+' '+dt.getHours()+':'+dt.getMinutes();
+//         tableRow.innerHTML = `
+//               <td>${dtfmt}</td>
+//               <td>${lbl}</td>
+//               <td>${sealevelm}m</td>
+//             `
+//         document.getElementById('tides').appendChild(tableRow)
+//     })
+// };
+
+
 function writeToTable(hl, lat0){
     const monthNames = ["Janúar", "Febrúar", "Mars", "Apríl", "Maí", "Júní",
                         "Júlí", "Águst", "September", "Október", "Nóvember", "Desember"
-];
+                       ];
 
     hl.forEach(level => {
         const tableRow = document.createElement('tr')
@@ -96,19 +127,22 @@ function writeToTable(hl, lat0){
             `
         document.getElementById('tides').appendChild(tableRow)
     })
-              };
+};
 
 function makeCalc() {
-const harmonicsOptions = {};
-const jsonfile = "{{ site.url }}/assets/{{page.datafile}}";
-fetch(jsonfile)
+    console.log("make calculations");
+    const harmonicsOptions = {};
+    const jsonfile = "{{ site.url }}/assets/{{page.datafile}}.json";
+    fetch(jsonfile)
     .then(response =>
         {return response.json()})
     .then(harmonics => {
         lat0=0
         // Lowest astronomical tide
         for (key in harmonics){
-            lat0 = lat0 - harmonics[key]['amplitude'];
+            if ("amplitude" in harmonics[key]){
+                lat0 = lat0 - harmonics[key]['amplitude'];
+            }
         }
         console.log("LAT "+lat0)
         const now = new Date();
@@ -126,9 +160,78 @@ fetch(jsonfile)
                 low: 'Low tide',
             },
         });
-        sendHighLow(highLow, lat0);
-        writeToTable(highLow, lat0);
-    })
+        // sendHighLow(highLow, lat0);
+        // writeToTable(highLow, lat0);
+    });
+
+    function calcCurr(harmonics) {
+        // harmonics = response.json();
+        // console.log("harmonics "+harmonics);
+        let depth=harmonics.shift();
+        console.log("removed :"+JSON.stringify(depth, null, 4));
+        const now = new Date();
+        const startDate = new Date(now.getTime() - (2*24*60*60*1000));
+        const endDate = new Date(now.getTime() + (30*24*60*60*1000));
+        console.log("Start time : " + startDate);
+        console.log("End time : " + endDate);
+        let pred = tidePredictor(harmonics, {phaseKey: 'phase'})
+        // var highLow = pred.getExtremesPrediction({
+        return [pred.getTimelinePrediction({
+            start: startDate,
+            end: endDate
+        }), depth];
+        // sendHighLow(highLow, lat0);
+    };
+
+    const jsonfile_u = "{{ site.url }}/assets/{{page.datafile}}_u.json";
+    const jsonfile_v = "{{ site.url }}/assets/{{page.datafile}}_v.json";
+    var p_fetchu = fetch(jsonfile_u).then(response =>
+        {return response.json()});
+    var p_fetchv = fetch(jsonfile_v).then(response =>
+        {return response.json()});
+    var p_curru = p_fetchu.then(calcCurr);
+    var p_currv = p_fetchv.then(calcCurr);
+
+    Promise.all([p_curru, p_currv]).then(function([c_v_obj, c_u_obj]) {
+        // write_to_table
+        const monthNames = ["Janúar", "Febrúar", "Mars", "Apríl", "Maí", "Júní",
+                            "Júlí", "Águst", "September", "Október", "Nóvember", "Desember"
+                           ];
+        console.log("all tide current values")
+        c_v = c_v_obj[0]
+        c_u = c_u_obj[0]
+        depth_v = c_v_obj[1].depth
+        depth_u = c_u_obj[1].depth
+        console.log("depths " + depth_v+ " "+depth_u)
+        c_v.forEach(function (value, i) {
+            var currspeed = Math.sqrt((value.level/100/100/depth_v)**2 + (c_u[i].level/100/100/depth_u)**2)*3.6;
+
+            console.log('entry %d: %s, %s', i, currspeed, value.level/100/100, c_u[i].level/100/100);
+            const tableRow = document.createElement('tr')
+            dt = value.time;
+            console.log(" time : " + dt);
+            console.log("date : " + dt.getDate());
+            dtfmt = dt.getFullYear()+' '+dt.getDate()+' '+monthNames[dt.getMonth()]+' '+dt.getHours()+':'+dt.getMinutes();
+            tableRow.innerHTML = `
+              <td>${dtfmt}</td>
+              <td>current</td>
+              <td>${currspeed}kn</td>
+            `
+            document.getElementById('tides').appendChild(tableRow)
+    });
+    });
+        // more processing
+        // return // something using both resultA and resultB
+    // });
+
+
+    // .then(response =>
+    //     {return response.json()})
+        // .then(
+    // console.log("Promise"+p)
+    // var current_u = Promise.resolve(Promise.resolve(Promise.resolve(p)));
+    // console.log("highlow prediction" + current_u)
+    // writeToTable(current_u, 0);
 }
 </script>
 

@@ -1,65 +1,65 @@
 - sitename: Grindavík
   site: grindavik.html
-  datafile: grindavik.json
+  datafile: grindavik
   latitude: 63.833062
   longitude: -22.428503
 
 - sitename: Reykjavík
   site: reykjavik.html
-  datafile: reykjavik.json
+  datafile: reykjavik
   latitude: 64.169902
   longitude: -21.981926
 
 - sitename: Hvalfjörður
   site: hvalfjordur.html
-  datafile: hvalfjordur.json
+  datafile: hvalfjordur
   latitude: 64.288122
   longitude: -21.903305
 
 - sitename: Grundartangi
   site: grundartangi.html
-  datafile: grundartangi.json
+  datafile: grundartangi
   latitude: 64.360305
   longitude: -21.767092
 
 - sitename: Borgarfjörður
   site: borgarfjordur.html
-  datafile: borgarfjordur.json
+  datafile: borgarfjordur
   latitude: 64.460067
   longitude: -22.061234
  
 - sitename: Löngufjörur
   site: longufjorur.html
-  datafile: longufjorur.json
+  datafile: longufjorur
   latitude:   64.718466
   longitude: -22.483521
 
 - sitename: Arnarstapi
   site: arnarstapi.html
-  datafile: arnarstapi.json
+  datafile: arnarstapi
   latitude: 64.755976
   longitude: -23.621807
 
 - sitename: Hornvík
   site: hornvik.html
-  datafile: hornvik.json
+  datafile: hornvik
   latitude: 66.448046
   longitude: -22.494507
 
 - sitename: Látravik
   site: latravik.html
-  datafile: latravik.json
+  datafile: latravik
   latitude: 66.410532
   longitude: -22.374687
 
 - sitename: Hólmavík
   site: holmavik.html
-  datafile: holmavik.json
+  datafile: holmavik
   latitude: 65.682037
   longitude: -21.607361
 
 - sitename: Húsavík
   site: husavik.html
-  datafile: husavik.json
+  datafile: husavik
   latitude: 66.042636
   longitude: -17.352905

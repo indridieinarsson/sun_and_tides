@@ -63,3 +63,9 @@
   datafile: husavik
   latitude: 66.042636
   longitude: -17.352905
+
+- sitename: Testsite
+  site: testsite.html
+  datafile: testsite
+  latitude: 66.4330
+  longitude: -23.1506

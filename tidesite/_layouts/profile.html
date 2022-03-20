@@ -27,11 +27,17 @@
   </header>
 
   <div class="post-content e-content" itemprop="articleBody">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.27.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@0.1.1"></script>
+<script src="{{ site.baseurl }}/assets/hammer.js"></script>
+<script src="{{ site.baseurl }}/assets/chartjs-plugin-zoom.js"></script>
 
 <script src="https://www.puck-js.com/puck.js"></script>
 <script src="{{ site.baseurl }}/assets/tide-predictor.js"></script>
 <!-- <script src="{{ site.baseurl }}/assets/myscript.js"></script> -->
 <script>
+
     function sendHighLow(hl, lat0){
         console.log("Tides : ");
         console.log(hl);
@@ -173,7 +179,7 @@ function makeCalc() {
         // const startDate = new Date(now.getTime() - (2*24*60*60*1000));
         // const endDate = new Date(now.getTime() + (30*24*60*60*1000));
         const startDate = new Date('March 13, 2022 13:00:00');
-        const endDate = new Date(startDate.getTime() + (30*24*60*60*1000));
+        const endDate = new Date(startDate.getTime() + (10*24*60*60*1000));
         console.log("Start time : " + startDate);
         console.log("End time : " + endDate);
         let pred = tidePredictor(harmonics, {phaseKey: 'phase', timeFidelity: 10*60*60})
@@ -206,18 +212,24 @@ function makeCalc() {
         depth_v = c_v_obj[1].depth
         depth_u = c_u_obj[1].depth
         console.log("depths " + depth_v+ " "+depth_u)
+        var labels = []
+        var dataset = []
+
+
         c_v.forEach(function (value, i) {
             dt = value.time;
-            console.log("Minutes " + dt.getMinutes());
             if(dt.getMinutes()==0){
-            var currspeed = Math.sqrt((value.level/100/100/depth_v)**2 + (c_u[i].level/100/100/depth_u)**2)*3.6;
+                dtfmt = dt.getFullYear()+' '+dt.getDate()+' '+monthNames[dt.getMonth()]+' '+dt.getHours()+':'+dt.getMinutes();
+                var currspeed = Math.sqrt((value.level/100/100/depth_v)**2 + (c_u[i].level/100/100/depth_u)**2)*3.6;
 
-            console.log('entry %d: %s, %s', i, currspeed, value.level/100/100, c_u[i].level/100/100);
-            const tableRow = document.createElement('tr')
-            console.log(" time : " + dt);
-            console.log("date : " + dt.getDate());
-            dtfmt = dt.getFullYear()+' '+dt.getDate()+' '+monthNames[dt.getMonth()]+' '+dt.getHours()+':'+dt.getMinutes();
-            tableRow.innerHTML = `
+                // console.log('entry %d: %s, %s', i, currspeed, value.level/100/100, c_u[i].level/100/100);
+                labels.push(dt);
+                dataset.push({
+                    x: dt,
+                    y: currspeed});
+
+                const tableRow = document.createElement('tr')
+                tableRow.innerHTML = `
               <td>${dtfmt}</td>
               <td>current</td>
               <td>${(value.level/100/100).toFixed(2)}</td>
@@ -226,9 +238,54 @@ function makeCalc() {
               <td>${(100*c_u[i].level/100/100/depth_u).toFixed(2)}</td>
               <td>${currspeed}kn</td>
             `
-            document.getElementById('tides').appendChild(tableRow)
+                document.getElementById('tides').appendChild(tableRow)
             }
-    });
+        });
+        const data = {
+            labels: [],
+            datasets: [{
+                label: 'My First dataset',
+                backgroundColor: 'rgb(255, 99, 132)',
+                borderColor: 'rgb(255, 99, 132)',
+                data: dataset,
+            }]
+        };
+
+        const config = {
+            type: 'line',
+            data: data,
+            options: {
+                scales: {
+                    xAxes: {
+                        type: 'time'
+                    }
+                },
+                plugins: {
+                    zoom: {
+                        pan: {
+                            enabled: true,
+                            mode: 'xy',
+                            overScaleMode: 'y'
+                        },
+                        zoom: {
+                            wheel: {
+                                enabled: true,
+                            },
+                            pinch: {
+                                enabled: true,
+                            },
+                            mode: 'xy',
+                            overScaleMode: 'y'
+                        }
+                    }
+                }
+            }
+        };
+        const myChart = new Chart(
+            document.getElementById('myChart'),
+            config
+        );
+
     });
         // more processing
         // return // something using both resultA and resultB
@@ -258,6 +315,17 @@ function makeCalc() {
 		       "popupContent": "{{page.sitename}}" } %} 
 {% endleaflet_map %}
   </div>
+
+<div>
+  <canvas id="myChart"></canvas>
+</div>
+
+// <script>
+//   const myChart = new Chart(
+//     document.getElementById('myChart'),
+//     config
+//   );
+// </script>
 <table class="table">
   <thead>
     <tr>

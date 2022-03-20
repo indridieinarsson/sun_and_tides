@@ -85,15 +85,15 @@ for site in sites:
         path = Path(fesdir+"/"+fname)
         ds = nc.Dataset(path)
 
-        uimag = interpolate.interpn((ds.variables['lon_u'], ds.variables['lat_u']), ds.variables['uIm'], point, fill_value=None ) [0]
-        ureal = interpolate.interpn((ds.variables['lon_u'], ds.variables['lat_u']), ds.variables['uRe'], point , fill_value=None) [0]
-        vimag = interpolate.interpn((ds.variables['lon_v'], ds.variables['lat_v']), ds.variables['vIm'], point, fill_value=None ) [0]
-        vreal = interpolate.interpn((ds.variables['lon_v'], ds.variables['lat_v']), ds.variables['vRe'], point , fill_value=None) [0]
-        uampl=np.sqrt(ureal**2+uimag**2)
-        uphase=np.arctan2(-uimag, ureal)/np.pi*180
+        uimag = interpolate.interpn((ds.variables['lon_u'], ds.variables['lat_u']), ds.variables['uIm'], point, fill_value=None, method="nearest") [0]
+        ureal = interpolate.interpn((ds.variables['lon_u'], ds.variables['lat_u']), ds.variables['uRe'], point, fill_value=None, method="nearest") [0]
+        vimag = interpolate.interpn((ds.variables['lon_v'], ds.variables['lat_v']), ds.variables['vIm'], point, fill_value=None, method="nearest") [0]
+        vreal = interpolate.interpn((ds.variables['lon_v'], ds.variables['lat_v']), ds.variables['vRe'], point, fill_value=None, method="nearest") [0]
+        uampl=np.sqrt(ureal**2 + uimag**2)
+        uphase=np.arctan2(-uimag, ureal)*180/np.pi
 
-        vampl=np.sqrt(vreal**2+vimag**2)
-        vphase=np.arctan2(-vimag, vreal)/np.pi*180
+        vampl=np.sqrt(vreal**2 + vimag**2)
+        vphase=np.arctan2(-vimag, vreal)*180/np.pi
         # ampl = interpolate.interpn((ds.variables['lat'], ds.variables['lon']), ds.variables['amplitude'], point )[0]
         # print(f' {sitename} {cname} {vampl}, {vphase} {uampl}, {uphase}')
         data_u.append({'name':cname.upper(), 'amplitude':uampl, 'phase':uphase})

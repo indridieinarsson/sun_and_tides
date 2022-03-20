@@ -170,15 +170,18 @@ function makeCalc() {
         let depth=harmonics.shift();
         console.log("removed :"+JSON.stringify(depth, null, 4));
         const now = new Date();
-        const startDate = new Date(now.getTime() - (2*24*60*60*1000));
-        const endDate = new Date(now.getTime() + (30*24*60*60*1000));
+        // const startDate = new Date(now.getTime() - (2*24*60*60*1000));
+        // const endDate = new Date(now.getTime() + (30*24*60*60*1000));
+        const startDate = new Date('March 13, 2022 13:00:00');
+        const endDate = new Date(startDate.getTime() + (30*24*60*60*1000));
         console.log("Start time : " + startDate);
         console.log("End time : " + endDate);
-        let pred = tidePredictor(harmonics, {phaseKey: 'phase'})
+        let pred = tidePredictor(harmonics, {phaseKey: 'phase', timeFidelity: 10*60*60})
         // var highLow = pred.getExtremesPrediction({
         return [pred.getTimelinePrediction({
             start: startDate,
-            end: endDate
+            end: endDate,
+            timeFidelity: 10*60*60
         }), depth];
         // sendHighLow(highLow, lat0);
     };
@@ -192,7 +195,7 @@ function makeCalc() {
     var p_curru = p_fetchu.then(calcCurr);
     var p_currv = p_fetchv.then(calcCurr);
 
-    Promise.all([p_curru, p_currv]).then(function([c_v_obj, c_u_obj]) {
+    Promise.all([p_curru, p_currv]).then(function([c_u_obj, c_v_obj]) {
         // write_to_table
         const monthNames = ["Janúar", "Febrúar", "Mars", "Apríl", "Maí", "Júní",
                             "Júlí", "Águst", "September", "Október", "Nóvember", "Desember"
@@ -204,20 +207,27 @@ function makeCalc() {
         depth_u = c_u_obj[1].depth
         console.log("depths " + depth_v+ " "+depth_u)
         c_v.forEach(function (value, i) {
+            dt = value.time;
+            console.log("Minutes " + dt.getMinutes());
+            if(dt.getMinutes()==0){
             var currspeed = Math.sqrt((value.level/100/100/depth_v)**2 + (c_u[i].level/100/100/depth_u)**2)*3.6;
 
             console.log('entry %d: %s, %s', i, currspeed, value.level/100/100, c_u[i].level/100/100);
             const tableRow = document.createElement('tr')
-            dt = value.time;
             console.log(" time : " + dt);
             console.log("date : " + dt.getDate());
             dtfmt = dt.getFullYear()+' '+dt.getDate()+' '+monthNames[dt.getMonth()]+' '+dt.getHours()+':'+dt.getMinutes();
             tableRow.innerHTML = `
               <td>${dtfmt}</td>
               <td>current</td>
+              <td>${(value.level/100/100).toFixed(2)}</td>
+              <td>${(c_u[i].level/100/100).toFixed(2)}</td>
+              <td>${(100*value.level/100/100/depth_v).toFixed(2)}</td>
+              <td>${(100*c_u[i].level/100/100/depth_u).toFixed(2)}</td>
               <td>${currspeed}kn</td>
             `
             document.getElementById('tides').appendChild(tableRow)
+            }
     });
     });
         // more processing

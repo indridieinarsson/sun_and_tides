@@ -37,7 +37,8 @@
 <script src="{{ site.baseurl }}/assets/tide-predictor.js"></script>
 <!-- <script src="{{ site.baseurl }}/assets/myscript.js"></script> -->
 <script>
-
+    var tideChartObj;
+    var currentChartObj;
     function sendHighLow(hl, lat0){
         console.log("Tides : ");
         console.log(hl);
@@ -104,7 +105,8 @@
 //         document.getElementById('tides').appendChild(tableRow)
 //     })
 // };
-
+var leftEnd;
+var rightEnd;
 
 function writeToTable(hl, lat0){
     const monthNames = ["Janúar", "Febrúar", "Mars", "Apríl", "Maí", "Júní",
@@ -134,15 +136,111 @@ function writeToTable(hl, lat0){
         document.getElementById('tides').appendChild(tableRow)
     })
 };
+function updateChart() {
+    Chart.helpers.each(Chart.instances, function (instance) {
+        console.log("Update chart : ")
+        instance._options.scales.xAxes.max = rightEnd;
+        instance._options.scales.xAxes.min = leftEnd;              
+        console.log(""+ leftEnd + " | " + rightEnd)
+        instance.update();
+    });
+}
+
+function tideGraph(hl, lat0) {
+    let tlabels = []
+    let tdataset = []
+    hl.forEach(function (value, i) {
+        dt = value.time;
+        tlabels.push(dt);
+        tdataset.push({
+            x: dt,
+            y: (value.level-lat0)/100});
+    });
+
+    const tidedata = {
+        labels: [],
+        datasets: [{
+            label: 'Tides',
+            backgroundColor: 'rgb(255, 99, 132)',
+            borderColor: 'rgb(255, 99, 132)',
+            data: tdataset,
+            cubicInterpolationMode: 'monotone',
+            tension: 0.4
+        }]
+    };
+
+        const tideconfig = {
+            type: 'line',
+            data: tidedata,
+            options: {
+                scales: {
+                    xAxes: {
+                        type: 'time',
+                        min: leftEnd,
+                        max: rightEnd
+                    }
+                },
+                plugins: {
+                    zoom: {
+                        pan: {
+                            enabled: true,
+                            mode: 'xy',
+                            overScaleMode: 'y',
+                            // onPan: function () {
+                            //     console.log("PAN");
+                            //     leftEnd = tideChartObj.getDatasetMeta(0).dataset._scale.chart.scales['x-axis-0']._table[0].time;
+                            //     rightEnd = tideChartObj.getDatasetMeta(0).dataset._scale.chart.scales['x-axis-0']._table[1].time;
+                            //     updateChart();
+                            // }
+                        },
+                        zoom: {
+                            wheel: {
+                                enabled: true,
+                            },
+                            pinch: {
+                                enabled: true,
+                            },
+                            mode: 'xy',
+                            overScaleMode: 'y',
+                            // onZoom: function () {
+                            //     console.log("zoom");
+                            //     console.log("TideChart" + tideChartObj);
+                            //     leftEnd = tideChartObj.getDatasetMeta(0).dataset._chart.scales.xAxes.min;
+                            //     rightEnd = tideChartObj.getDatasetMeta(0).dataset._chart.scales.xAxes.max;
+                            //     console.log("Min - max " + leftEnd + " | " + rightEnd);
+                            //     updateChart();
+                            // }
+
+                        }
+                    }
+                }
+            }
+        };
+        tideChartObj = new Chart(
+            document.getElementById('tideChart'),
+            tideconfig
+        );
+};
+
+function syncZoom() {
+    leftEnd = tideChartObj.getDatasetMeta(0).dataset._chart.scales.xAxes.min;
+    rightEnd = tideChartObj.getDatasetMeta(0).dataset._chart.scales.xAxes.max;
+    updateChart()
+}
 
 function makeCalc() {
+
+    leftEnd = new Date(document.getElementById("startDate").value);
+    rightEnd = new Date(document.getElementById("endDate").value);
     console.log("make calculations");
     const harmonicsOptions = {};
     const jsonfile = "{{ site.url }}/assets/{{page.datafile}}.json";
-    fetch(jsonfile)
-    .then(response =>
-        {return response.json()})
-    .then(harmonics => {
+    tide_fetch_p = fetch(jsonfile)
+        .then(response =>
+            {return response.json()});
+    tide_calc_p = tide_fetch_p.then(calcTide);
+
+    function calcTide(harmonics) {
         lat0=0
         // Lowest astronomical tide
         for (key in harmonics){
@@ -152,8 +250,11 @@ function makeCalc() {
         }
         console.log("LAT "+lat0)
         const now = new Date();
-        const startDate = new Date(now.getTime() - (2*24*60*60*1000));
-        const endDate = new Date(now.getTime() + (30*24*60*60*1000));
+        // const startDate = new Date(now.getTime() - (2*24*60*60*1000));
+        // const endDate = new Date(now.getTime() + (30*24*60*60*1000));
+        var startDate = new Date(document.getElementById("startDate").value);
+        var endDate = new Date(document.getElementById("endDate").value);
+
         console.log("Start time : " + startDate);
         console.log("End time : " + endDate);
         let pred = tidePredictor(harmonics, {phaseKey: 'phase',})
@@ -166,22 +267,18 @@ function makeCalc() {
                 low: 'Low tide',
             },
         });
+        tideGraph(highLow, lat0);
         // sendHighLow(highLow, lat0);
         // writeToTable(highLow, lat0);
-    });
+    };
 
     function calcCurr(harmonics) {
         // harmonics = response.json();
         // console.log("harmonics "+harmonics);
         let depth=harmonics.shift();
         console.log("removed :"+JSON.stringify(depth, null, 4));
-        const now = new Date();
-        // const startDate = new Date(now.getTime() - (2*24*60*60*1000));
-        // const endDate = new Date(now.getTime() + (30*24*60*60*1000));
-        const startDate = new Date('March 13, 2022 13:00:00');
-        const endDate = new Date(startDate.getTime() + (10*24*60*60*1000));
-        console.log("Start time : " + startDate);
-        console.log("End time : " + endDate);
+        var startDate = new Date(document.getElementById("startDate").value);
+        var endDate = new Date(document.getElementById("endDate").value);
         let pred = tidePredictor(harmonics, {phaseKey: 'phase', timeFidelity: 10*60*60})
         // var highLow = pred.getExtremesPrediction({
         return [pred.getTimelinePrediction({
@@ -214,15 +311,11 @@ function makeCalc() {
         console.log("depths " + depth_v+ " "+depth_u)
         var labels = []
         var dataset = []
-
-
         c_v.forEach(function (value, i) {
             dt = value.time;
-            if(dt.getMinutes()==0){
+            if(dt.getMinutes()%30==0){
                 dtfmt = dt.getFullYear()+' '+dt.getDate()+' '+monthNames[dt.getMonth()]+' '+dt.getHours()+':'+dt.getMinutes();
                 var currspeed = Math.sqrt((value.level/100/100/depth_v)**2 + (c_u[i].level/100/100/depth_u)**2)*3.6;
-
-                // console.log('entry %d: %s, %s', i, currspeed, value.level/100/100, c_u[i].level/100/100);
                 labels.push(dt);
                 dataset.push({
                     x: dt,
@@ -257,7 +350,9 @@ function makeCalc() {
             options: {
                 scales: {
                     xAxes: {
-                        type: 'time'
+                        type: 'time',
+                        min: leftEnd,
+                        max: rightEnd
                     }
                 },
                 plugins: {
@@ -275,14 +370,21 @@ function makeCalc() {
                                 enabled: true,
                             },
                             mode: 'xy',
-                            overScaleMode: 'y'
+                            overScaleMode: 'y',
+                            // onZoom: function () {
+                            //     console.log("zoom");
+                            //     console.log("TideChart" + tideChart);
+                            //     leftEnd = tideChart.getDatasetMeta(0).dataset._scale.chart.scales['x-axis-0']._table[0].time;
+                            //     rightEnd = tideChart.getDatasetMeta(0).dataset._scale.chart.scales['x-axis-0']._table[1].time;
+                            //     updateChart();
+                            // }
                         }
                     }
                 }
             }
         };
-        const myChart = new Chart(
-            document.getElementById('myChart'),
+        currentChartObj = new Chart(
+            document.getElementById('currentChart'),
             config
         );
 
@@ -302,6 +404,22 @@ function makeCalc() {
 }
 </script>
 
+<label for="start">Start date:</label>
+<input type="date" id="startDate" name="trip-start">
+<label for="end">End date:</label>
+<input type="date" id="endDate" name="trip-end">
+
+<script>
+    // Set Default date for inputs
+Date.prototype.toDateInputValue = (function() {
+    var local = new Date(this);
+    local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
+    return local.toJSON().slice(0,10);
+});
+document.getElementById('startDate').value = new Date().toDateInputValue();
+endTime = new Date(new Date().getTime() + 30*24*60*60*1000 );
+document.getElementById('endDate').value = endTime.toDateInputValue();
+</script>
 
 <!-- <button onclick="Puck.write('LED1.set();\n');">LED On!</button>
  <button onclick="Puck.write('LED1.reset();\n');">!</button> -->
@@ -317,8 +435,14 @@ function makeCalc() {
   </div>
 
 <div>
-  <canvas id="myChart"></canvas>
+  <canvas id="currentChart"></canvas>
 </div>
+
+<div>
+  <canvas id="tideChart"></canvas>
+</div>
+
+<button onclick="syncZoom();">Þysja Straumum eins og Sjávarföllum</button>
 
 // <script>
 //   const myChart = new Chart(

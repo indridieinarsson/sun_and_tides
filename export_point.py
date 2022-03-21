@@ -34,5 +34,5 @@ for site in sites:
         data.append({'name':constname.upper(), 'amplitude':ampl, 'phase':phase})
 
     dfile = site['datafile']
-    with open(f'tidesite/assets/{dfile}', 'w') as f:
+    with open(f'tidesite/assets/{dfile}.json', 'w') as f:
         json.dump(data, f)

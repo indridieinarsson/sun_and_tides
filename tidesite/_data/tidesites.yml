@@ -19,8 +19,8 @@
 - sitename: Grundartangi
   site: grundartangi.html
   datafile: grundartangi
-  latitude: 64.360305
-  longitude: -21.767092
+  latitude: 64.352444
+  longitude: -21.736757
 
 - sitename: Borgarfjörður
   site: borgarfjordur.html
@@ -43,14 +43,14 @@
 - sitename: Hornvík
   site: hornvik.html
   datafile: hornvik
-  latitude: 66.448046
-  longitude: -22.494507
+  latitude: 66.456348
+  longitude: -22.505971
 
 - sitename: Látravik
   site: latravik.html
   datafile: latravik
-  latitude: 66.410532
-  longitude: -22.374687
+  latitude: 66.420754
+  longitude: -22.32698
 
 - sitename: Hólmavík
   site: holmavik.html
@@ -61,8 +61,8 @@
 - sitename: Húsavík
   site: husavik.html
   datafile: husavik
-  latitude: 66.042636
-  longitude: -17.352905
+  latitude: 66.040143
+  longitude: -17.386174
 
 - sitename: Testsite
   site: testsite.html

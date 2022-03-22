@@ -27,11 +27,19 @@
   </header>
 
   <div class="post-content e-content" itemprop="articleBody">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.27.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@0.1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-crosshair@1.2.0/dist/chartjs-plugin-crosshair.min.js"></script>
+<!--     <script src="{{ site.baseurl }}/assets/chartjs-plugin-zoom.js"></script> -->
+<!--     <script src="{{ site.baseurl }}/assets/hammer.js"></script> -->
 
 <script src="https://www.puck-js.com/puck.js"></script>
 <script src="{{ site.baseurl }}/assets/tide-predictor.js"></script>
 <!-- <script src="{{ site.baseurl }}/assets/myscript.js"></script> -->
 <script>
+    var tideChartObj;
+    var currentChartObj;
     function sendHighLow(hl, lat0){
         console.log("Tides : ");
         console.log(hl);
@@ -69,10 +77,42 @@
         //Puck.write(cmd);
     };
 
+
+// function writeCurrentTable(hl_u, hl_v){
+//     const monthNames = ["Janúar", "Febrúar", "Mars", "Apríl", "Maí", "Júní",
+//                         "Júlí", "Águst", "September", "Október", "Nóvember", "Desember"
+//                        ];
+
+//     hl.forEach(level => {
+//         const tableRow = document.createElement('tr')
+//         sealevelm = ( (level.level - lat0)/100).toFixed(2);
+//         dt = level.time;
+//         console.log(" time : " + dt);
+//         lbl = "";
+//         if (level.high)
+//         {
+//             lbl = "Flóð";
+//         } else
+//         {
+//             lbl = "Fjara";
+//         }
+//         console.log("date : " + dt.getDate());
+//         dtfmt = dt.getFullYear()+' '+dt.getDate()+' '+monthNames[dt.getMonth()]+' '+dt.getHours()+':'+dt.getMinutes();
+//         tableRow.innerHTML = `
+//               <td>${dtfmt}</td>
+//               <td>${lbl}</td>
+//               <td>${sealevelm}m</td>
+//             `
+//         document.getElementById('tides').appendChild(tableRow)
+//     })
+// };
+var leftEnd;
+var rightEnd;
+
 function writeToTable(hl, lat0){
     const monthNames = ["Janúar", "Febrúar", "Mars", "Apríl", "Maí", "Júní",
                         "Júlí", "Águst", "September", "Október", "Nóvember", "Desember"
-];
+                       ];
 
     hl.forEach(level => {
         const tableRow = document.createElement('tr')
@@ -96,42 +136,328 @@ function writeToTable(hl, lat0){
             `
         document.getElementById('tides').appendChild(tableRow)
     })
-              };
+};
+function updateChart() {
+    Chart.helpers.each(Chart.instances, function (instance) {
+        console.log("Update chart : ")
+        instance._options.scales.xAxes.max = rightEnd;
+        instance._options.scales.xAxes.min = leftEnd;              
+        console.log(""+ leftEnd + " | " + rightEnd)
+        instance.update();
+    });
+}
+
+function tideGraph(hl, lat0) {
+    let tlabels = []
+    let tdataset = []
+    hl.forEach(function (value, i) {
+        dt = value.time;
+        tlabels.push(dt);
+        tdataset.push({
+            x: dt,
+            y: (value.level-lat0)/100});
+    });
+
+    const tidedata = {
+        labels: [],
+        datasets: [{
+            label: 'Tides',
+            backgroundColor: 'rgb(255, 99, 132)',
+            borderColor: 'rgb(255, 99, 132)',
+            data: tdataset,
+            // cubicInterpolationMode: 'monotone',
+            tension: 0
+        }]
+    };
+
+        const tideconfig = {
+            type: 'line',
+            data: tidedata,
+            options: {
+                scales: {
+                    x: {
+                        type: 'time',
+                        min: leftEnd,
+                        max: rightEnd
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Sjávarhæð[m]'
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        animation: false,
+                        mode: 'nearest',
+                        intersect: false,
+                    },
+                    //     callbacks: {
+                    //         title: function(a, d) {
+                    //             // return a[0].element.x.toFixed(2);
+                    //             return (
+                    //                 a[0].label + " : " + a[0].element.y.toFixed(2)
+                    //             );
+                    //         },
+                    //         label: function(d) {
+                    //             console.log("label callback")
+                    //             return (
+                    //                 d.chart.data.datasets[d.datasetIndex].label + ": " + d.element.y.toFixed(2)
+                    //             );
+                    //         }
+                    //     }
+                    // },
+                    crosshair: {
+                        sync: {
+                            enabled: true
+                        },
+                        line: {
+                            color: '#F66',  // crosshair line color
+                            width: 1        // crosshair line width
+                        },
+                        zoom: {
+                            enabled: true,                                      // enable zooming
+                            zoomboxBackgroundColor: 'rgba(66,133,244,0.2)',     // background color of zoom box 
+                            zoomboxBorderColor: '#48F',                         // border color of zoom box
+                            zoomButtonText: 'Reset Zoom',                       // reset zoom button text
+                            zoomButtonClass: 'reset-zoom',                      // reset zoom button class
+                        }
+                    }
+                }
+            }
+        };
+        tideChartObj = new Chart(
+            document.getElementById('tideChart'),
+            tideconfig
+        );
+};
+
+function syncZoom() {
+    leftEnd = tideChartObj.getDatasetMeta(0).dataset._chart.scales.xAxes.min;
+    rightEnd = tideChartObj.getDatasetMeta(0).dataset._chart.scales.xAxes.max;
+    updateChart()
+}
 
 function makeCalc() {
-const harmonicsOptions = {};
-const jsonfile = "{{ site.url }}/assets/{{page.datafile}}";
-fetch(jsonfile)
-    .then(response =>
-        {return response.json()})
-    .then(harmonics => {
+
+    leftEnd = new Date(document.getElementById("startDate").value);
+    rightEnd = new Date(document.getElementById("endDate").value);
+    console.log("make calculations");
+    const jsonfile = "{{ site.url }}/assets/{{page.datafile}}.json";
+    tide_fetch_p = fetch(jsonfile)
+        .then(response =>
+            {return response.json()});
+    tide_calc_p = tide_fetch_p.then(calcTide);
+
+    function calcTide(harmonics) {
         lat0=0
         // Lowest astronomical tide
         for (key in harmonics){
-            lat0 = lat0 - harmonics[key]['amplitude'];
+            if ("amplitude" in harmonics[key]){
+                lat0 = lat0 - harmonics[key]['amplitude'];
+            }
         }
         console.log("LAT "+lat0)
         const now = new Date();
-        const startDate = new Date(now.getTime() - (2*24*60*60*1000));
-        const endDate = new Date(now.getTime() + (30*24*60*60*1000));
-        console.log("Start time : " + startDate);
-        console.log("End time : " + endDate);
+        var startDate = new Date(document.getElementById("startDate").value);
+        var endDate = new Date(document.getElementById("endDate").value);
+
         let pred = tidePredictor(harmonics, {phaseKey: 'phase',})
-        var highLow = pred.getExtremesPrediction({
+        tideres = pred.getTimelinePrediction({
             start: startDate,
             end: endDate,
-            labels: {
-                //optional human-readable labels
-                high: 'High tide',
-                low: 'Low tide',
-            },
+            timeFidelity: 10*60*60
         });
-        sendHighLow(highLow, lat0);
-        writeToTable(highLow, lat0);
-    })
+        tideGraph(tideres, lat0);
+        // var highLow = pred.getExtremesPrediction({ // To calculate high/low tide
+        //     start: startDate,
+        //     end: endDate,
+        //     labels: {
+        //         //optional human-readable labels
+        //         high: 'High tide',
+        //         low: 'Low tide',
+        //     },
+        // });
+        // tideGraph(highLow, lat0);
+        // sendHighLow(highLow, lat0);
+        // writeToTable(highLow, lat0);
+    };
+
+    function calcCurr(harmonics) {
+        // harmonics = response.json();
+        // console.log("harmonics "+harmonics);
+        let depth=harmonics.shift();
+        console.log("removed :"+JSON.stringify(depth, null, 4));
+        var startDate = new Date(document.getElementById("startDate").value);
+        var endDate = new Date(document.getElementById("endDate").value);
+        let pred = tidePredictor(harmonics, {phaseKey: 'phase', timeFidelity: 10*60*60})
+        // var highLow = pred.getExtremesPrediction({
+        return [pred.getTimelinePrediction({
+            start: startDate,
+            end: endDate,
+            timeFidelity: 10*60*60
+        }), depth];
+        // sendHighLow(highLow, lat0);
+    };
+
+    const jsonfile_u = "{{ site.url }}/assets/{{page.datafile}}_u.json";
+    const jsonfile_v = "{{ site.url }}/assets/{{page.datafile}}_v.json";
+    var p_fetchu = fetch(jsonfile_u).then(response =>
+        {return response.json()});
+    var p_fetchv = fetch(jsonfile_v).then(response =>
+        {return response.json()});
+    var p_curru = p_fetchu.then(calcCurr);
+    var p_currv = p_fetchv.then(calcCurr);
+
+    Promise.all([p_curru, p_currv]).then(function([c_u_obj, c_v_obj]) {
+        // write_to_table
+        const monthNames = ["Janúar", "Febrúar", "Mars", "Apríl", "Maí", "Júní",
+                            "Júlí", "Águst", "September", "Október", "Nóvember", "Desember"
+                           ];
+        console.log("all tide current values")
+        c_v = c_v_obj[0]
+        c_u = c_u_obj[0]
+        depth_v = c_v_obj[1].depth
+        depth_u = c_u_obj[1].depth
+        console.log("depths " + depth_v+ " "+depth_u)
+        var labels = []
+        var dataset = []
+        var dataset_dir = []
+        c_v.forEach(function (value, i) {
+            dt = value.time;
+                dtfmt = dt.getFullYear()+' '+dt.getDate()+' '+monthNames[dt.getMonth()]+' '+dt.getHours()+':'+dt.getMinutes();
+                var currspeed = Math.sqrt((value.level/100/100/depth_v)**2 + (c_u[i].level/100/100/depth_u)**2)*3.6;
+            var currdir = (Math.atan2(value.level/depth_v, c_u[i].level/depth_u)+Math.PI)*180/Math.PI;
+                labels.push(dt);
+                dataset.push({
+                    x: dt,
+                    y: currspeed.toFixed(2)});
+                dataset_dir.push({
+                    x: dt,
+                    y: currdir.toFixed(0)});
+
+            if(dt.getMinutes()%30==0){
+                const tableRow = document.createElement('tr')
+                tableRow.innerHTML = `
+              <td>${dtfmt}</td>
+              <td>current</td>
+              <td>${(value.level/100/100).toFixed(2)}</td>
+              <td>${(c_u[i].level/100/100).toFixed(2)}</td>
+              <td>${(100*value.level/100/100/depth_v).toFixed(2)}</td>
+              <td>${(100*c_u[i].level/100/100/depth_u).toFixed(2)}</td>
+              <td>${currspeed}kn</td>
+            `
+                document.getElementById('tides').appendChild(tableRow)
+            }
+        });
+        const data = {
+            labels: [],
+            datasets: [{
+                label: 'Tidal current',
+                backgroundColor: 'rgb(255, 99, 132)',
+                borderColor: 'rgb(255, 99, 132)',
+                data: dataset,
+                tension: 0,
+                unit: "kn"
+            },
+            {
+                label: 'Tidal current direction',
+                backgroundColor: 'rgb(255, 99, 132)',
+                borderColor: 'rgb(255, 99, 132)',
+                data: dataset_dir,
+                tension: 0,
+                unit: "°",
+                hidden: true
+            }
+                      ]
+        };
+
+        const config = {
+            type: 'line',
+            data: data,
+            options: {
+                scales: {
+                    x: {
+                        type: 'time',
+                        min: leftEnd,
+                        max: rightEnd
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Straumhraði[kn]'
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        animation: false,
+                        mode: 'nearest',
+                        intersect: false,
+                        callbacks: {
+                            label: (tooltipItem, chart) =>
+                            data.datasets.map(
+                                ds => ds.label + ': ' + ds.data[tooltipItem.dataIndex].y+ds.unit
+                            )
+                        }
+                    },
+                    crosshair: {
+                        sync: {
+                            enabled: true
+                        },
+                        line: {
+                            color: '#F66',  // crosshair line color
+                            width: 1        // crosshair line width
+                        },
+                        zoom: {
+                            enabled: true,                                      // enable zooming
+                            zoomboxBackgroundColor: 'rgba(66,133,244,0.2)',     // background color of zoom box 
+                            zoomboxBorderColor: '#48F',                         // border color of zoom box
+                            zoomButtonText: 'Reset Zoom',                       // reset zoom button text
+                            zoomButtonClass: 'reset-zoom',                      // reset zoom button class
+                        }
+                    }
+                }
+            }
+        };
+        currentChartObj = new Chart(
+            document.getElementById('currentChart'),
+            config
+        );
+
+    });
+        // more processing
+        // return // something using both resultA and resultB
+    // });
+
+
+    // .then(response =>
+    //     {return response.json()})
+        // .then(
+    // console.log("Promise"+p)
+    // var current_u = Promise.resolve(Promise.resolve(Promise.resolve(p)));
+    // console.log("highlow prediction" + current_u)
+    // writeToTable(current_u, 0);
 }
 </script>
 
+<label for="start">Start date:</label>
+<input type="date" id="startDate" name="trip-start">
+<label for="end">End date:</label>
+<input type="date" id="endDate" name="trip-end">
+
+<script>
+    // Set Default date for inputs
+Date.prototype.toDateInputValue = (function() {
+    var local = new Date(this);
+    local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
+    return local.toJSON().slice(0,10);
+});
+document.getElementById('startDate').value = new Date().toDateInputValue();
+endTime = new Date(new Date().getTime() + 5*24*60*60*1000 );
+document.getElementById('endDate').value = endTime.toDateInputValue();
+</script>
 
 <!-- <button onclick="Puck.write('LED1.set();\n');">LED On!</button>
  <button onclick="Puck.write('LED1.reset();\n');">!</button> -->
@@ -145,6 +471,23 @@ fetch(jsonfile)
 		       "popupContent": "{{page.sitename}}" } %} 
 {% endleaflet_map %}
   </div>
+
+<div>
+  <canvas id="currentChart"></canvas>
+</div>
+
+<div>
+  <canvas id="tideChart"></canvas>
+</div>
+
+<button onclick="syncZoom();">Þysja straumum eins og sjávarföllum</button>
+
+// <script>
+//   const myChart = new Chart(
+//     document.getElementById('myChart'),
+//     config
+//   );
+// </script>
 <table class="table">
   <thead>
     <tr>

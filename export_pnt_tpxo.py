@@ -57,6 +57,7 @@ for site in sites:
     point = (site['longitude']+360, site['latitude'])
     data = []
     data_u = []
+    data_v = []
     # for path in pathlist:
     for cname in h_const:
         fname = h_const[cname]
@@ -68,7 +69,7 @@ for site in sites:
         ampl=np.sqrt(real**2+imag**2)
         phase=np.arctan2(-imag,real)/np.pi*180
         # ampl = interpolate.interpn((ds.variables['lat'], ds.variables['lon']), ds.variables['amplitude'], point )[0]
-        print(f' {sitename} {cname} {ampl}, {phase}')
+        # print(f' {sitename} {cname} {ampl}, {phase}')
         data.append({'name':cname.upper(), 'amplitude':ampl, 'phase':phase})
 
     gridpath = Path(fesdir+"/"+gridfile)
@@ -76,26 +77,33 @@ for site in sites:
     depth_v = interpolate.interpn((ds.variables['lon_v'], ds.variables['lat_v']), ds.variables['hv'], point, fill_value=None ) [0]
     depth_u = interpolate.interpn((ds.variables['lon_u'], ds.variables['lat_u']), ds.variables['hu'], point, fill_value=None ) [0]
 
-    data_u.append({'sitename': sitename, 'latitude': site['latitude'], 'longitude': site['longitude'], 'depth': depth_v, 'depth2':depth_u})
+    data_v.append({'sitename': sitename, 'depth': depth_v})
+    data_u.append({'sitename': sitename, 'depth': depth_u})
 
     for cname in u_const:
         fname = u_const[cname]
         path = Path(fesdir+"/"+fname)
         ds = nc.Dataset(path)
 
-        uimag = interpolate.interpn((ds.variables['lon_u'], ds.variables['lat_u']), ds.variables['uIm'], point, fill_value=None ) [0]
-        ureal = interpolate.interpn((ds.variables['lon_u'], ds.variables['lat_u']), ds.variables['uRe'], point , fill_value=None) [0]
-        vimag = interpolate.interpn((ds.variables['lon_v'], ds.variables['lat_v']), ds.variables['vIm'], point, fill_value=None ) [0]
-        vreal = interpolate.interpn((ds.variables['lon_v'], ds.variables['lat_v']), ds.variables['vRe'], point , fill_value=None) [0]
-        uampl=np.sqrt(ureal**2+uimag**2)
-        uphase=np.arctan2(-uimag, ureal)/np.pi*180
+        uimag = interpolate.interpn((ds.variables['lon_u'], ds.variables['lat_u']), ds.variables['uIm'], point, fill_value=None, method="nearest") [0]
+        ureal = interpolate.interpn((ds.variables['lon_u'], ds.variables['lat_u']), ds.variables['uRe'], point, fill_value=None, method="nearest") [0]
+        vimag = interpolate.interpn((ds.variables['lon_v'], ds.variables['lat_v']), ds.variables['vIm'], point, fill_value=None, method="nearest") [0]
+        vreal = interpolate.interpn((ds.variables['lon_v'], ds.variables['lat_v']), ds.variables['vRe'], point, fill_value=None, method="nearest") [0]
+        uampl=np.sqrt(ureal**2 + uimag**2)
+        uphase=np.arctan2(-uimag, ureal)*180/np.pi
 
-        vampl=np.sqrt(vreal**2+vimag**2)
-        vphase=np.arctan2(-vimag, vreal)/np.pi*180
+        vampl=np.sqrt(vreal**2 + vimag**2)
+        vphase=np.arctan2(-vimag, vreal)*180/np.pi
         # ampl = interpolate.interpn((ds.variables['lat'], ds.variables['lon']), ds.variables['amplitude'], point )[0]
-        print(f' {sitename} {cname} {vampl}, {vphase} {uampl}, {uphase}')
-        data_u.append({'name':cname.upper(), 'amplitude_u':uampl, 'phase_u':uphase, 'amplitude_v':vampl, 'phase_v':vphase})
+        # print(f' {sitename} {cname} {vampl}, {vphase} {uampl}, {uphase}')
+        data_u.append({'name':cname.upper(), 'amplitude':uampl, 'phase':uphase})
+        data_v.append({'name':cname.upper(), 'amplitude':vampl, 'phase':vphase})
 
-    # dfile = site['datafile']
-    # with open(f'tidesite/assets_new/{dfile}', 'w') as f:
-    #     json.dump(data, f)
+    dfile = site['datafile']
+    print(f'datafile : {dfile}')
+    with open(f'tidesite/assets/{dfile}.json', 'w') as f:
+        json.dump(data, f)
+    with open(f'tidesite/assets/{dfile}_u.json', 'w') as f:
+        json.dump(data_u, f)
+    with open(f'tidesite/assets/{dfile}_v.json', 'w') as f:
+        json.dump(data_v, f)

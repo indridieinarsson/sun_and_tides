@@ -44,7 +44,6 @@
         console.log("Tides : ");
         console.log(hl);
         console.log("**********");
-        //myString = JSON.stringify(hl);
         filestr = []
         for (key in hl){
             entry = hl[key];
@@ -52,8 +51,6 @@
             filestr.push(line)
         }
         myString = "\""+filestr.join(";")+"\"";
-        //console.log(ble)
-        //console.log(myString);
         cmd="require(\"Storage\").write(\"tides.data.csv\","+myString+");\n";
         console.log(cmd);
         Puck.connect(function(c) {
@@ -113,7 +110,6 @@ function writeToTable(hl, lat0){
     const monthNames = ["Janúar", "Febrúar", "Mars", "Apríl", "Maí", "Júní",
                         "Júlí", "Águst", "September", "Október", "Nóvember", "Desember"
                        ];
-
     hl.forEach(level => {
         const tableRow = document.createElement('tr')
         sealevelm = ( (level.level - lat0)/100).toFixed(2);
@@ -155,82 +151,68 @@ function tideGraph(hl, lat0) {
         tlabels.push(dt);
         tdataset.push({
             x: dt,
-            y: (value.level-lat0)/100});
+            y: (value.level-lat0)/1000});
     });
 
     const tidedata = {
         labels: [],
         datasets: [{
-            label: 'Tides',
-            backgroundColor: 'rgb(255, 99, 132)',
-            borderColor: 'rgb(255, 99, 132)',
+            label: 'Sjávarföll',
+            backgroundColor: 'rgb(0, 0, 255)',
+            borderColor: 'rgb(0, 0, 255)',
+            pointRadius: 1,
             data: tdataset,
             // cubicInterpolationMode: 'monotone',
             tension: 0
         }]
     };
 
-        const tideconfig = {
-            type: 'line',
-            data: tidedata,
-            options: {
-                scales: {
-                    x: {
-                        type: 'time',
-                        min: leftEnd,
-                        max: rightEnd
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Sjávarhæð[m]'
-                        }
-                    }
+    const tideconfig = {
+        type: 'line',
+        data: tidedata,
+        options: {
+            scales: {
+                x: {
+                    type: 'time',
+                    min: leftEnd,
+                    max: rightEnd
                 },
-                plugins: {
-                    tooltip: {
-                        animation: false,
-                        mode: 'nearest',
-                        intersect: false,
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Sjávarhæð[m]'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    animation: false,
+                    mode: 'index',
+                    intersect: false,
+                },
+                crosshair: {
+                    sync: {
+                        enabled: true
                     },
-                    //     callbacks: {
-                    //         title: function(a, d) {
-                    //             // return a[0].element.x.toFixed(2);
-                    //             return (
-                    //                 a[0].label + " : " + a[0].element.y.toFixed(2)
-                    //             );
-                    //         },
-                    //         label: function(d) {
-                    //             console.log("label callback")
-                    //             return (
-                    //                 d.chart.data.datasets[d.datasetIndex].label + ": " + d.element.y.toFixed(2)
-                    //             );
-                    //         }
-                    //     }
-                    // },
-                    crosshair: {
-                        sync: {
-                            enabled: true
-                        },
-                        line: {
-                            color: '#F66',  // crosshair line color
-                            width: 1        // crosshair line width
-                        },
-                        zoom: {
-                            enabled: true,                                      // enable zooming
-                            zoomboxBackgroundColor: 'rgba(66,133,244,0.2)',     // background color of zoom box 
-                            zoomboxBorderColor: '#48F',                         // border color of zoom box
-                            zoomButtonText: 'Reset Zoom',                       // reset zoom button text
-                            zoomButtonClass: 'reset-zoom',                      // reset zoom button class
-                        }
+                    line: {
+                        color: '#F66',  // crosshair line color
+                        width: 1        // crosshair line width
+                    },
+                    zoom: {
+                        enabled: true,                                      // enable zooming
+                        zoomboxBackgroundColor: 'rgba(66,133,244,0.2)',     // background color of zoom box 
+                        zoomboxBorderColor: '#48F',                         // border color of zoom box
+                        zoomButtonText: 'Þysja út',                       // reset zoom button text
+                        zoomButtonClass: 'reset-zoom',                      // reset zoom button class
                     }
                 }
             }
-        };
-        tideChartObj = new Chart(
-            document.getElementById('tideChart'),
-            tideconfig
-        );
+        }
+    };
+    tideChartObj = new Chart(
+        document.getElementById('tideChart'),
+        tideconfig
+    );
 };
 
 function syncZoom() {
@@ -240,7 +222,6 @@ function syncZoom() {
 }
 
 function makeCalc() {
-
     leftEnd = new Date(document.getElementById("startDate").value);
     rightEnd = new Date(document.getElementById("endDate").value);
     console.log("make calculations");
@@ -285,10 +266,7 @@ function makeCalc() {
     };
 
     function calcCurr(harmonics) {
-        // harmonics = response.json();
-        // console.log("harmonics "+harmonics);
         let depth=harmonics.shift();
-        console.log("removed :"+JSON.stringify(depth, null, 4));
         var startDate = new Date(document.getElementById("startDate").value);
         var endDate = new Date(document.getElementById("endDate").value);
         let pred = tidePredictor(harmonics, {phaseKey: 'phase', timeFidelity: 10*60*60})
@@ -326,48 +304,53 @@ function makeCalc() {
         var dataset_dir = []
         c_v.forEach(function (value, i) {
             dt = value.time;
-                dtfmt = dt.getFullYear()+' '+dt.getDate()+' '+monthNames[dt.getMonth()]+' '+dt.getHours()+':'+dt.getMinutes();
-                var currspeed = Math.sqrt((value.level/100/100/depth_v)**2 + (c_u[i].level/100/100/depth_u)**2)*3.6;
-            var currdir = (Math.atan2(value.level/depth_v, c_u[i].level/depth_u)+Math.PI)*180/Math.PI;
+            dtfmt = dt.getFullYear()+' '+dt.getDate()+' '+monthNames[dt.getMonth()]+' '+dt.getHours()+':'+dt.getMinutes();
+            var currspeed = Math.sqrt((value.level/100/100/depth_v)**2 + (c_u[i].level/100/100/depth_u)**2)*1.9438444;
+            // var currdir = (Math.atan2(value.level/depth_v, c_u[i].level/depth_u)+Math.PI)*180/Math.PI;
+            var currdir = (Math.atan2(-c_u[i].level/depth_u, value.level/depth_v)+Math.PI)*180/Math.PI;
                 labels.push(dt);
                 dataset.push({
                     x: dt,
-                    y: currspeed.toFixed(2)});
+                    y: currspeed});
                 dataset_dir.push({
                     x: dt,
-                    y: currdir.toFixed(0)});
-
-            if(dt.getMinutes()%30==0){
-                const tableRow = document.createElement('tr')
-                tableRow.innerHTML = `
-              <td>${dtfmt}</td>
-              <td>current</td>
-              <td>${(value.level/100/100).toFixed(2)}</td>
-              <td>${(c_u[i].level/100/100).toFixed(2)}</td>
-              <td>${(100*value.level/100/100/depth_v).toFixed(2)}</td>
-              <td>${(100*c_u[i].level/100/100/depth_u).toFixed(2)}</td>
-              <td>${currspeed}kn</td>
-            `
-                document.getElementById('tides').appendChild(tableRow)
-            }
+                    y: currdir});
+            // Write to table
+            // if(dt.getMinutes()%30==0){
+            //     const tableRow = document.createElement('tr')
+            //     tableRow.innerHTML = `
+            //   <td>${dtfmt}</td>
+            //   <td>current</td>
+            //   <td>${(value.level/100/100).toFixed(2)}</td>
+            //   <td>${(c_u[i].level/100/100).toFixed(2)}</td>
+            //   <td>${(100*value.level/100/100/depth_v).toFixed(2)}</td>
+            //   <td>${(100*c_u[i].level/100/100/depth_u).toFixed(2)}</td>
+            //   <td>${currspeed}kn</td>
+            // `
+            //     document.getElementById('tides').appendChild(tableRow)
+            // }
         });
         const data = {
             labels: [],
             datasets: [{
-                label: 'Tidal current',
-                backgroundColor: 'rgb(255, 99, 132)',
-                borderColor: 'rgb(255, 99, 132)',
+                label: 'Straumhraði',
+                backgroundColor: 'rgb(0, 0, 255)',
+                borderColor: 'rgb(0, 0, 255)',
+                pointRadius: 1,
                 data: dataset,
-                tension: 0,
+                tension: 0.4,
+                displayDigits: 2,
                 unit: "kn"
             },
             {
-                label: 'Tidal current direction',
-                backgroundColor: 'rgb(255, 99, 132)',
-                borderColor: 'rgb(255, 99, 132)',
+                label: 'Straumstefna',
+                backgroundColor: 'rgb(255,255,255)',
+                borderColor: 'rgb(255,255,255)',
+                pointRadius: 1,
                 data: dataset_dir,
-                tension: 0,
+                tension: 0.4,
                 unit: "°",
+                displayDigits: 0,
                 hidden: true
             }
                       ]
@@ -393,12 +376,12 @@ function makeCalc() {
                 plugins: {
                     tooltip: {
                         animation: false,
-                        mode: 'nearest',
+                        mode: 'index',
                         intersect: false,
                         callbacks: {
                             label: (tooltipItem, chart) =>
                             data.datasets.map(
-                                ds => ds.label + ': ' + ds.data[tooltipItem.dataIndex].y+ds.unit
+                                ds => ds.label + ': ' + ds.data[tooltipItem.dataIndex].y.toFixed(ds.displayDigits)+ds.unit
                             )
                         }
                     },
@@ -414,7 +397,7 @@ function makeCalc() {
                             enabled: true,                                      // enable zooming
                             zoomboxBackgroundColor: 'rgba(66,133,244,0.2)',     // background color of zoom box 
                             zoomboxBorderColor: '#48F',                         // border color of zoom box
-                            zoomButtonText: 'Reset Zoom',                       // reset zoom button text
+                            zoomButtonText: 'Þysja út',                       // reset zoom button text
                             zoomButtonClass: 'reset-zoom',                      // reset zoom button class
                         }
                     }
@@ -427,24 +410,13 @@ function makeCalc() {
         );
 
     });
-        // more processing
-        // return // something using both resultA and resultB
-    // });
-
-
-    // .then(response =>
-    //     {return response.json()})
-        // .then(
-    // console.log("Promise"+p)
-    // var current_u = Promise.resolve(Promise.resolve(Promise.resolve(p)));
-    // console.log("highlow prediction" + current_u)
     // writeToTable(current_u, 0);
 }
 </script>
 
-<label for="start">Start date:</label>
+<label for="start">Frá:</label>
 <input type="date" id="startDate" name="trip-start">
-<label for="end">End date:</label>
+<label for="end">Til:</label>
 <input type="date" id="endDate" name="trip-end">
 
 <script>
@@ -480,26 +452,24 @@ document.getElementById('endDate').value = endTime.toDateInputValue();
   <canvas id="tideChart"></canvas>
 </div>
 
-<button onclick="syncZoom();">Þysja straumum eins og sjávarföllum</button>
+<!-- <script> -->
+<!--   const myChart = new Chart( -->
+<!--     document.getElementById('myChart'), -->
+<!--     config -->
+<!--   ); -->
+<!-- </script> -->
 
-// <script>
-//   const myChart = new Chart(
-//     document.getElementById('myChart'),
-//     config
-//   );
-// </script>
-<table class="table">
-  <thead>
-    <tr>
-      <th>Tími</th>
-      <th>Flóð/Fjara</th>
-      <th>Sjávarhæð (metrar)</th>
-    </tr>
-    <tbody id="tides">
-
-    </tbody>
-  </thead>
-</table>
+<!-- <table class="table"> -->
+<!--   <thead> -->
+<!--     <tr> -->
+<!--       <th>Tími</th> -->
+<!--       <th>Flóð/Fjara</th> -->
+<!--       <th>Sjávarhæð (metrar)</th> -->
+<!--     </tr> -->
+<!--     <tbody id="tides"> -->
+<!--     </tbody> -->
+<!--   </thead> -->
+<!-- </table> -->
 
   {%- if site.disqus.shortname -%}
     {%- include disqus_comments.html -%}

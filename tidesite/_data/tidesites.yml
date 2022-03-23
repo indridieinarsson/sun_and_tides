@@ -7,8 +7,8 @@
 - sitename: Reykjavík
   site: reykjavik.html
   datafile: reykjavik
-  latitude: 64.169902
-  longitude: -21.981926
+  latitude: 64.171801
+  longitude: -22.0447
 
 - sitename: Hvalfjörður
   site: hvalfjordur.html

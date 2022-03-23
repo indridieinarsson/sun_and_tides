@@ -70,7 +70,7 @@ for site in sites:
         phase=np.arctan2(-imag,real)/np.pi*180
         # ampl = interpolate.interpn((ds.variables['lat'], ds.variables['lon']), ds.variables['amplitude'], point )[0]
         # print(f' {sitename} {cname} {ampl}, {phase}')
-        data.append({'name':cname.upper(), 'amplitude':ampl, 'phase':phase})
+        data.append({'name':cname.upper(), 'amplitude':ampl/10.0, 'phase':phase})
 
     gridpath = Path(fesdir+"/"+gridfile)
     ds = nc.Dataset(gridpath)

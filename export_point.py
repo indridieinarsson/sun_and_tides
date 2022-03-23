@@ -31,7 +31,7 @@ for site in sites:
         phase = interpolate.interpn((ds.variables['lat'], ds.variables['lon']), ds.variables['phase'], point ) [0]
         ampl = interpolate.interpn((ds.variables['lat'], ds.variables['lon']), ds.variables['amplitude'], point )[0]
         print(f' {sitename} {constname} {ampl}, {phase}')
-        data.append({'name':constname.upper(), 'amplitude':ampl, 'phase':phase})
+        data.append({'name':constname.upper(), 'amplitude':ampl, 'phase':phase})# use cm, not mm
 
     dfile = site['datafile']
     with open(f'tidesite/assets/{dfile}.json', 'w') as f:

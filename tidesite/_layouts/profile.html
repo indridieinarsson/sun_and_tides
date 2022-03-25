@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ page.lang | default: site.lang | default: "en" }}">
-
+<head>
   {%- include head.html -%}
  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
@@ -9,22 +9,21 @@
  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
    crossorigin=""></script>
-    <script src="https://cdn.jsdelivr.net/npm/leaflet-rotatedmarker@0.2.0/leaflet.rotatedMarker.min.js"/>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-rotatedmarker@0.2.0/leaflet.rotatedMarker.min.js" crossorigin=""></script>
+</head>
   <body>
+
 
     {%- include header.html -%}
 
     <main class="page-content" aria-label="Content">
       <div class="wrapper">
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.13.0/css/ol.css" type="text/css">
     <style>
       .map {
         height: 600px;
         width: 100%;
       }
     </style>
-    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.13.0/build/ol.js"></script>
 
 <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
 
@@ -374,6 +373,7 @@ function makeCalc() {
             return ds.label + ': ' + ds.data[tooltipItem.dataIndex].y.toFixed(ds.displayDigits)+ds.unit;
         };
 
+
         const config = {
             type: 'line',
             data: data,
@@ -562,7 +562,8 @@ function Point(x, y, round) {
 // Icon options
 var iconOptions = {
     iconUrl: '{{ site.baseurl }}/assets/arrow.png',
-    iconSize: [50, 50]
+    iconSize: [50, 50],
+    iconAnchor: [25,50]
 }
 // Creating a custom icon
 var customIcon = L.icon(iconOptions);
@@ -570,19 +571,15 @@ var customIcon = L.icon(iconOptions);
 // Creating Marker Options
 var markerOptions = {
     title: "MyLocation",
-    clickable: true,
-    draggable: true,
-    icon: customIcon
+    clickable: false,
+    draggable: false,
+    icon: customIcon,
 }
 
 var marker = L.marker([{{page.latitude}}, {{page.longitude}}], markerOptions).addTo(map);
-// setInterval(myMethod, 100);
-// var rotangle = 0
-// function myMethod(){
-//     rotangle = rotangle+1
-//     marker.setRotationAngle(rotangle);
-// };
-
+map.on('click', function(e) {
+    alert("Lengd: " + e.latlng.lng + ", Breidd: " + e.latlng.lat)
+});
 </script>
 
 
@@ -630,4 +627,3 @@ var marker = L.marker([{{page.latitude}}, {{page.longitude}}], markerOptions).ad
   </body>
 
 </html>
-

@@ -137,7 +137,7 @@ function writeToTable(hl, lat0){
             lbl = "Fjara";
         }
         console.log("date : " + dt.getDate());
-        dtfmt = dt.getFullYear()+' '+dt.getDate()+' '+monthNames[dt.getMonth()]+' '+dt.getHours()+':'+dt.getMinutes();
+        dtfmt = dt.getFullYear()+' '+dt.getDate()+'. '+monthNames[dt.getMonth()]+' '+dt.getHours()+':'+dt.getMinutes();
         tableRow.innerHTML = `
               <td>${dtfmt}</td>
               <td>${lbl}</td>
@@ -256,7 +256,7 @@ function fetchHarmonics(){
     }
 }
 
-function calcHighLow(){
+function calcHighLow(sendToWatch){
     var startDate = new Date(document.getElementById("startDate").value);
     var endDate = new Date(document.getElementById("endDate").value);
     var highLow = tidePred.getExtremesPrediction({ // To calculate high/low tide
@@ -270,7 +270,9 @@ function calcHighLow(){
     });
     //tideGraph(highLow, lat0);
     writeToTable(highLow, lat0);
-    sendHighLow(highLow, lat0);
+    if (sendToWatch==1){
+        sendHighLow(highLow, lat0);
+    }
 }
 
 function calcTide(harmonics) {
@@ -479,7 +481,8 @@ document.getElementById('endDate').value = endTime.toDateInputValue();
 <!-- <button onclick="Puck.write('LED1.set();\n');">LED On!</button>
  <button onclick="Puck.write('LED1.reset();\n');">!</button> -->
 <button onclick="makeCalc();">Reikna sjávarföll</button>
-<button onclick="calcHighLow();">Send töflu á úr</button>
+<button onclick="calcHighLow(0);">Flóðatafla</button>
+<button onclick="calcHighLow(1);">Senda töflu á úr</button>
 
   </div>
 <div id="map" style="width: 600px; height: 400px;"></div>

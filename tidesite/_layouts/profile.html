@@ -234,63 +234,82 @@ function syncZoom() {
     updateChart()
 }
 
-function makeCalc() {
-    leftEnd = new Date(document.getElementById("startDate").value);
-    rightEnd = new Date(document.getElementById("endDate").value);
-    console.log("make calculations");
+var thisHarmonics;
+var tidePred;
+var lat0;
+function fetchHarmonics(){
     const jsonfile = "{{ site.url }}/assets/{{page.datafile}}.json";
     tide_fetch_p = fetch(jsonfile)
         .then(response =>
             {return response.json()});
-    tide_calc_p = tide_fetch_p.then(calcTide);
-
-    function calcTide(harmonics) {
+    tide_fetch_p.then(storeRes);
+    function storeRes(harm){
+        thisHarmonics = harm;
+        tidePred = tidePredictor(thisHarmonics, {phaseKey: 'phase',})
         lat0=0
         // Lowest astronomical tide
-        for (key in harmonics){
-            if ("amplitude" in harmonics[key]){
-                lat0 = lat0 - harmonics[key]['amplitude'];
+        for (key in thisHarmonics){
+            if ("amplitude" in thisHarmonics[key]){
+                lat0 = lat0 - thisHarmonics[key]['amplitude'];
             }
         }
-        console.log("LAT "+lat0)
-        const now = new Date();
-        var startDate = new Date(document.getElementById("startDate").value);
-        var endDate = new Date(document.getElementById("endDate").value);
+    }
+}
 
-        let pred = tidePredictor(harmonics, {phaseKey: 'phase',})
-        tideres = pred.getTimelinePrediction({
-            start: startDate,
-            end: endDate,
-            timeFidelity: 10*60*60
-        });
-        tideGraph(tideres, lat0);
-        // var highLow = pred.getExtremesPrediction({ // To calculate high/low tide
-        //     start: startDate,
-        //     end: endDate,
-        //     labels: {
-        //         //optional human-readable labels
-        //         high: 'High tide',
-        //         low: 'Low tide',
-        //     },
-        // });
-        // tideGraph(highLow, lat0);
-        // sendHighLow(highLow, lat0);
-        // writeToTable(highLow, lat0);
-    };
+function calcHighLow(){
+    var startDate = new Date(document.getElementById("startDate").value);
+    var endDate = new Date(document.getElementById("endDate").value);
+    var highLow = tidePred.getExtremesPrediction({ // To calculate high/low tide
+        start: startDate,
+        end: endDate,
+        labels: {
+            //optional human-readable labels
+            high: 'High tide',
+            low: 'Low tide',
+        },
+    });
+    //tideGraph(highLow, lat0);
+    writeToTable(highLow, lat0);
+    sendHighLow(highLow, lat0);
+}
 
-    function calcCurr(harmonics) {
-        let depth=harmonics.shift();
-        var startDate = new Date(document.getElementById("startDate").value);
-        var endDate = new Date(document.getElementById("endDate").value);
-        let pred = tidePredictor(harmonics, {phaseKey: 'phase', timeFidelity: 10*60*60})
-        // var highLow = pred.getExtremesPrediction({
-        return [pred.getTimelinePrediction({
-            start: startDate,
-            end: endDate,
-            timeFidelity: 10*60*60
-        }), depth];
-        // sendHighLow(highLow, lat0);
-    };
+function calcTide(harmonics) {
+    var startDate = new Date(document.getElementById("startDate").value);
+    var endDate = new Date(document.getElementById("endDate").value);
+
+    tideres = tidePred.getTimelinePrediction({
+        start: startDate,
+        end: endDate,
+        timeFidelity: 10*60*60
+    });
+    tideGraph(tideres, lat0);
+};
+
+function calcCurr(harmonics) {
+    let depth=harmonics.shift();
+    var startDate = new Date(document.getElementById("startDate").value);
+    var endDate = new Date(document.getElementById("endDate").value);
+    let pred = tidePredictor(harmonics, {phaseKey: 'phase', timeFidelity: 10*60*60})
+    // var highLow = pred.getExtremesPrediction({
+    return [pred.getTimelinePrediction({
+        start: startDate,
+        end: endDate,
+        timeFidelity: 10*60*60
+    }), depth];
+    // sendHighLow(highLow, lat0);
+};
+
+
+function makeCalc() {
+    leftEnd = new Date(document.getElementById("startDate").value);
+    rightEnd = new Date(document.getElementById("endDate").value);
+    // const jsonfile = "{{ site.url }}/assets/{{page.datafile}}.json";
+    // tide_fetch_p = fetch(jsonfile)
+    //     .then(response =>
+    //         {return response.json()});
+    // tide_calc_p = tide_fetch_p.then(calcTide);
+    calcTide(thisHarmonics)
+
 
     const jsonfile_u = "{{ site.url }}/assets/{{page.datafile}}_u.json";
     const jsonfile_v = "{{ site.url }}/assets/{{page.datafile}}_v.json";
@@ -436,6 +455,9 @@ function makeCalc() {
     // writeToTable(current_u, 0);
 }
 </script>
+<script>
+    fetchHarmonics();
+</script>
 
 <label for="start">Frá:</label>
 <input type="date" id="startDate" name="trip-start">
@@ -457,6 +479,7 @@ document.getElementById('endDate').value = endTime.toDateInputValue();
 <!-- <button onclick="Puck.write('LED1.set();\n');">LED On!</button>
  <button onclick="Puck.write('LED1.reset();\n');">!</button> -->
 <button onclick="makeCalc();">Reikna sjávarföll</button>
+<button onclick="calcHighLow();">Send töflu á úr</button>
 
   </div>
 <div id="map" style="width: 600px; height: 400px;"></div>
@@ -600,17 +623,17 @@ map.on('click', function(e) {
 <!--   ); -->
 <!-- </script> -->
 
-<!-- <table class="table"> -->
-<!--   <thead> -->
-<!--     <tr> -->
-<!--       <th>Tími</th> -->
-<!--       <th>Flóð/Fjara</th> -->
-<!--       <th>Sjávarhæð (metrar)</th> -->
-<!--     </tr> -->
-<!--     <tbody id="tides"> -->
-<!--     </tbody> -->
-<!--   </thead> -->
-<!-- </table> -->
+<table class="table">
+  <thead>
+    <tr>
+      <th>Tími</th>
+      <th>Flóð/Fjara</th>
+      <th>Sjávarhæð (metrar)</th>
+    </tr>
+    <tbody id="tides">
+    </tbody>
+  </thead>
+</table>
 
   {%- if site.disqus.shortname -%}
     {%- include disqus_comments.html -%}

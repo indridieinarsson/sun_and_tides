@@ -42,7 +42,8 @@ plugins:
 page_gen:
   - data: 'tidesites'
     template: 'profile'
-    name: 'sitename'
+    title: 'sitename'
+    name: 'datafile'
     dir: 'tides'
 
 # Exclude from processing.

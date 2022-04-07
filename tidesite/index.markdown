@@ -16,7 +16,7 @@ layout: home
  {% leaflet_geojson {
  "type": "Feature",
  "properties": {"popupContent": "{{st.sitename}}",
- "href": "/tides/{{st.site}}"},
+ "href": "/tides/{{st.datafile}}.html"},
  "geometry": {
  "type": "Point",
  "coordinates": 

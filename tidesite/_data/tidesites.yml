@@ -1,9 +1,28 @@
+
+- sitename: Þorlákshöfn
+  site: thorlakshofn.html
+  datafile: thorlakshofn
+  latitude: 63.857017
+  longitude: -21.268787
+
 - sitename: Grindavík
   site: grindavik.html
   datafile: grindavik
   latitude: 63.833062
   longitude: -22.428503
 
+- sitename: Reykjanestá/Röst
+  site: reykjanesta.html
+  datafile: reykjanesta
+  latitude: 63.802289
+  longitude: -22.746457
+
+- sitename: Sandvík
+  site: sandvik.html
+  datafile: sandvik
+  latitude: 63.853401
+  longitude: -22.743257
+   
 - sitename: Reykjavík
   site: reykjavik.html
   datafile: reykjavik

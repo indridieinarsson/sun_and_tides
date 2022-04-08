@@ -341,7 +341,10 @@ function makeCalc() {
             dtfmt = dt.getFullYear()+' '+dt.getDate()+' '+monthNames[dt.getMonth()]+' '+dt.getHours()+':'+dt.getMinutes();
             var currspeed = Math.sqrt((value.level/100/100/depth_v)**2 + (c_u[i].level/100/100/depth_u)**2)*1.9438444;
             // var currdir = (Math.atan2(value.level/depth_v, c_u[i].level/depth_u)+Math.PI)*180/Math.PI;
-            var currdir = (Math.atan2(-c_u[i].level/depth_u, value.level/depth_v)+Math.PI)*180/Math.PI;
+            var currdir = (Math.atan2(c_u[i].level/depth_u, value.level/depth_v))*180/Math.PI;
+	    if (currdir < 0){
+		    currdir = currdir + 360;
+	    }
                 labels.push(dt);
                 dataset.push({
                     x: dt,

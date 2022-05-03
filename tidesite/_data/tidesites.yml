@@ -18,6 +18,11 @@
   datafile: sandvik
   latitude: 63.853401
   longitude: -22.743257
+
+- sitename: Garðskagi
+  datafile: gardskagi
+  latitude: 64.100272
+  longitude: -22.707525
    
 - sitename: Reykjavík
   datafile: reykjavik

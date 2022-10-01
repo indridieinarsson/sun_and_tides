@@ -46,16 +46,19 @@ def usage():
     """
     parser = argparse.ArgumentParser(
         description='Program example using the Python API for FES.')
-    parser.add_argument('ocean',
+    parser.add_argument('--ocean',
                         help='Path to the configuration file that contains '
                         'the defintion of grids to use to compute the '
                         'ocean tide',
-                        type=argparse.FileType('r'))
-    parser.add_argument('load',
+                        type=argparse.FileType('r'),
+                       default="ocean_tide_extrapolated.ini")
+ 
+    parser.add_argument('--load',
                         help='Path to the configuration file that contains '
                         'the defintion of grids to use to compute the '
                         'load tide',
-                        type=argparse.FileType('r'))
+                        type=argparse.FileType('r'),
+                       default="load_tide.ini")
     parser.add_argument('--startdate',
                         help='Date of calculation of the oceanic tide.', type=datetime.fromisoformat,
                         default=datetime(2021, 5, 1))

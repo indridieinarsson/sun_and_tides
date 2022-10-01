@@ -62,6 +62,16 @@ def usage():
     parser.add_argument('--enddate',
                         help='Date of calculation of the oceanic tide.', type=datetime.fromisoformat,
                         default=datetime(2021, 6, 1))
+
+    parser.add_argument('--latitude',
+                        help='Latitude.', type=float,
+                        default=64.154673)
+    parser.add_argument('--longitude',
+                        help='Longitude.', type=float,
+                        default=-21.908769)
+    parser.add_argument('--out',
+                        help='Output file.',
+                        default="tidal_calendar.ics")
     return parser.parse_args()
 
 
@@ -78,8 +88,6 @@ def main():
 
     delta = args.enddate - args.startdate
     print(delta.days)
-    exit
-
 
     # Creating the time series
     dates = np.array([
@@ -89,9 +97,12 @@ def main():
     # print("date : ", args.date)
     # print(dates)
 
+    lats = np.full(dates.shape, args.latitude)
+    lons = np.full(dates.shape, args.longitude)
+
     # Stykkishólmur: 65.10761731461221, -22.704729429936798
-    lats = np.full(dates.shape, 65.10761731461221)
-    lons = np.full(dates.shape, -22.704729429936798)
+    #lats = np.full(dates.shape, 65.10761731461221)
+    #lons = np.full(dates.shape, -22.704729429936798)
 
     # Reykjavík:
     #lats = np.full(dates.shape, 64.154673)
@@ -100,9 +111,6 @@ def main():
     # Computes tides
     tide, lp, _ = short_tide.calculate(lons, lats, dates)
     t_load, t_load_lp, _ = radial_tide.calculate(lons, lats, dates)
-
-
-
 
     total_tide = tide + lp + t_load
     t_float = np.array([d.timestamp() for d in dates])
@@ -158,7 +166,8 @@ def main():
     # 2 Nautical twilight.
     # 3 Civil twilight. - Birting - Dagsetur
     # 4 Daytime.
-    def alm_for_day(this_time, city_info, cal):
+    # def alm_for_day(this_time, city_info, cal):
+    def alm_for_day(this_time, lat, lon, cal):
         zone = timezone('UTC')
         now = zone.localize(this_time)
         midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -167,7 +176,8 @@ def main():
         t0 = ts.from_datetime(midnight)
         t1 = ts.from_datetime(next_midnight)
         eph = load('de421.bsp')
-        city = wgs84.latlon(city_info.latitude * N, city_info.longitude * E)
+        # city = wgs84.latlon(city_info.latitude * N, city_info.longitude * E)
+        city = wgs84.latlon(lat * N, lon * E)
         f = almanac.dark_twilight_day(eph, city)
         times, events = almanac.find_discrete(t0, t1, f)
         previous_e = f(t0)[()]
@@ -221,7 +231,8 @@ def main():
     start_date = args.startdate#  datetime(2021, 1, 1)
     end_date = args.enddate# datetime(2021, 12, 31)
     for single_date in daterange(start_date, end_date):
-        alm_for_day(single_date, city_info, cal)
+        # alm_for_day(single_date, city_info, cal)
+        alm_for_day(single_date, args.latitude, args.longitude, cal)
 
     for f in flod:
         flod_ev = Event()
@@ -240,12 +251,8 @@ def main():
         fjara_ev.duration = timedelta(seconds=10)
         cal.events.add(fjara_ev)
     
-    with open('2021_05.ics', 'w') as f:
+    with open(args.out, 'w') as f:
         f.writelines(cal)
-
-
-
-
 
     # for idx, date in enumerate(dates):
         # print("%s %9.3f %9.3f %9.3f %9.3f %9.3f %9.3f %9.3f" %

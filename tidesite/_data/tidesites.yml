@@ -43,6 +43,11 @@
   datafile: borgarfjordur
   latitude: 64.460067
   longitude: -22.061234
+
+- sitename: Straumfjörður
+  datafile: straumfjordur
+  latitude: 64.455922
+  longitude: -22.244568
  
 - sitename: Löngufjörur
   datafile: longufjorur
